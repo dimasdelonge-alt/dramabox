@@ -6,13 +6,14 @@ import { useFlickReelsDetail } from "@/hooks/useFlickReels";
 import { ChevronLeft, ChevronRight, Loader2, List, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import SubtitleOverlay from "@/components/SubtitleOverlay";
 
 export default function FlickReelsWatchPage() {
   const params = useParams();
   const router = useRouter();
   const bookId = params.bookId as string;
   const initialVideoId = params.videoId as string;
-  
+
   // Use separate state for active ID to allow instant UI updates
   const [activeVideoId, setActiveVideoId] = useState(initialVideoId);
   const [showEpisodeList, setShowEpisodeList] = useState(false);
@@ -39,7 +40,7 @@ export default function FlickReelsWatchPage() {
 
   // Derived state
   const episodes = useMemo(() => data?.episodes || [], [data]);
-  
+
   const currentIndex = useMemo(() => {
     return episodes.findIndex((ep) => ep.id === activeVideoId);
   }, [episodes, activeVideoId]);
@@ -56,26 +57,26 @@ export default function FlickReelsWatchPage() {
   // For auto-next: set src immediately, warmup runs in background
   useEffect(() => {
     if (!currentEpisodeData?.raw?.videoUrl) return;
-    
+
     // Update timestamp when video changes
     videoTimestamp.current = Date.now();
-    
+
     const videoUrl = currentEpisodeData.raw.videoUrl;
     const newSrc = `/api/proxy/video?url=${encodeURIComponent(videoUrl)}&referer=${encodeURIComponent("https://www.flickreels.com/")}&_t=${videoTimestamp.current}`;
     const warmupUrl = `/api/proxy/warmup?url=${encodeURIComponent(videoUrl)}`;
-    
+
     if (isInitialLoad.current) {
       // Initial load: wait for warmup before playing
       setVideoReady(false);
       setWarmupError(false);
-      
+
       fetch(warmupUrl)
         .then(res => res.json())
         .then(data => {
           console.log("[Warmup] Initial load:", data.success ? "success" : "failed");
           setVideoReady(true);
           if (!data.success) setWarmupError(true);
-          
+
           // Mark that initial load is done
           isInitialLoad.current = false;
         })
@@ -90,10 +91,10 @@ export default function FlickReelsWatchPage() {
       if (videoRef.current) {
         videoRef.current.src = newSrc;
         videoRef.current.load();
-        videoRef.current.play().catch(() => {});
-        
+        videoRef.current.play().catch(() => { });
+
         // Fire warmup in background (don't await)
-        fetch(warmupUrl).catch(() => {});
+        fetch(warmupUrl).catch(() => { });
       }
     }
   }, [currentEpisodeData?.raw?.videoUrl, retryCount]);
@@ -101,21 +102,31 @@ export default function FlickReelsWatchPage() {
   // Set initial video src after warmup completes (only for initial load)
   useEffect(() => {
     if (!videoReady || !currentEpisodeData?.raw?.videoUrl || !videoRef.current) return;
-    
+
     const newSrc = `/api/proxy/video?url=${encodeURIComponent(currentEpisodeData.raw.videoUrl)}&referer=${encodeURIComponent("https://www.flickreels.com/")}&_t=${videoTimestamp.current}`;
-    
+
     // Check if src needs update
     if (videoRef.current.src !== newSrc && !videoRef.current.src.endsWith(newSrc.split('?')[1])) {
-       videoRef.current.src = newSrc;
-       videoRef.current.load();
-       videoRef.current.play().catch(() => {});
-       
-       // Mark initial load as done after we've set the src
-       if (isInitialLoad.current) {
-         isInitialLoad.current = false;
-       }
+      videoRef.current.src = newSrc;
+      videoRef.current.load();
+      videoRef.current.play().catch(() => { });
+
+      // Mark initial load as done after we've set the src
+      if (isInitialLoad.current) {
+        isInitialLoad.current = false;
+      }
     }
   }, [videoReady, currentEpisodeData?.raw?.videoUrl]);
+
+  // Track video time for subtitles
+  const [currentTime, setCurrentTime] = useState(0);
+
+  // Sync time from video events
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  };
 
   // Handlers
   const handleEpisodeChange = (episodeId: string, preserveFullscreen = false) => {
@@ -143,8 +154,8 @@ export default function FlickReelsWatchPage() {
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center space-y-4">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
         <div className="text-center space-y-2">
-            <h3 className="text-white font-medium text-lg">Memuat video...</h3>
-            <p className="text-white/60 text-sm">Mohon tunggu sebentar, data sedang diambil.</p>
+          <h3 className="text-white font-medium text-lg">Memuat video...</h3>
+          <p className="text-white/60 text-sm">Mohon tunggu sebentar, data sedang diambil.</p>
         </div>
       </div>
     );
@@ -178,7 +189,7 @@ export default function FlickReelsWatchPage() {
             <ChevronLeft className="w-6 h-6" />
             <span className="text-primary font-bold hidden sm:inline shadow-black drop-shadow-md">SekaiDrama</span>
           </Link>
-          
+
           <div className="text-center flex-1 px-4 min-w-0">
             <h1 className="text-white font-medium truncate text-sm sm:text-base drop-shadow-md">
               {drama.title}
@@ -199,8 +210,9 @@ export default function FlickReelsWatchPage() {
 
       {/* Main Video Area */}
       <div className="flex-1 w-full h-full relative bg-black flex flex-col items-center justify-center">
-         <div className="relative w-full h-full flex items-center justify-center">
-            {/* Always render video element to preserve fullscreen state */}
+        <div className="relative w-full h-full flex items-center justify-center">
+          {/* Always render video element to preserve fullscreen state */}
+          <>
             <video
               ref={videoRef}
               controls
@@ -211,64 +223,70 @@ export default function FlickReelsWatchPage() {
               )}
               poster={currentEpisodeData?.raw?.chapter_cover}
               onEnded={handleVideoEnded}
+              onTimeUpdate={handleTimeUpdate}
               onError={async (e) => {
-                  if (retryCount < 2) {
-                      // Proxy failed - token probably expired, refetch fresh URLs
-                      console.log("Video load failed, refetching fresh data...");
-                      setRetryCount(prev => prev + 1);
-                      await refetch();
-                  }
+                if (retryCount < 2) {
+                  // Proxy failed - token probably expired, refetch fresh URLs
+                  console.log("Video load failed, refetching fresh data...");
+                  setRetryCount(prev => prev + 1);
+                  await refetch();
+                }
               }}
               // @ts-ignore
               referrerPolicy="no-referrer"
             />
-            {/* Loading overlay */}
-            {(!currentEpisodeData || !videoReady) && (
-              <div className="absolute inset-0 flex items-center justify-center z-20 flex-col gap-2">
-                <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                {!videoReady && currentEpisodeData && (
-                  <span className="text-white/60 text-sm">Preparing video...</span>
-                )}
-              </div>
-            )}
-         </div>
-
-         {/* Navigation Controls Overlay - Bottom */}
-         <div className="absolute bottom-20 md:bottom-12 left-0 right-0 z-40 pointer-events-none flex justify-center pb-safe-area-bottom">
-            <div className="flex items-center gap-2 md:gap-6 pointer-events-auto bg-black/60 backdrop-blur-md px-3 py-1.5 md:px-6 md:py-3 rounded-full border border-white/10 shadow-lg transition-all scale-90 md:scale-100 origin-bottom">
-                <button
-                  onClick={() => {
-                    const prev = episodes[currentIndex - 1];
-                    if (prev) handleEpisodeChange(prev.id);
-                  }}
-                  disabled={currentIndex <= 0}
-                  className="p-1.5 md:p-2 rounded-full text-white disabled:opacity-30 hover:bg-white/10 transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4 md:w-6 md:h-6" />
-                </button>
-                
-                <span className="text-white font-medium text-xs md:text-sm tabular-nums min-w-[60px] md:min-w-[80px] text-center">
-                  Ep {currentEpisodeData ? currentEpisodeData.index + 1 : 1} / {totalEpisodes}
-                </span>
-
-                <button
-                  onClick={() => {
-                    const next = episodes[currentIndex + 1];
-                    if (next) handleEpisodeChange(next.id);
-                  }}
-                  disabled={currentIndex >= totalEpisodes - 1}
-                  className="p-1.5 md:p-2 rounded-full text-white disabled:opacity-30 hover:bg-white/10 transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4 md:w-6 md:h-6" />
-                </button>
+            <SubtitleOverlay
+              url={currentEpisodeData?.raw?.videoUrl ? `/api/proxy/video?url=${encodeURIComponent(currentEpisodeData.raw.videoUrl)}&sub=true` : ""}
+              currentTime={currentTime}
+            />
+          </>
+          {/* Loading overlay */}
+          {(!currentEpisodeData || !videoReady) && (
+            <div className="absolute inset-0 flex items-center justify-center z-20 flex-col gap-2">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              {!videoReady && currentEpisodeData && (
+                <span className="text-white/60 text-sm">Preparing video...</span>
+              )}
             </div>
-         </div>
+          )}
+        </div>
+
+        {/* Navigation Controls Overlay - Bottom */}
+        <div className="absolute bottom-20 md:bottom-12 left-0 right-0 z-40 pointer-events-none flex justify-center pb-safe-area-bottom">
+          <div className="flex items-center gap-2 md:gap-6 pointer-events-auto bg-black/60 backdrop-blur-md px-3 py-1.5 md:px-6 md:py-3 rounded-full border border-white/10 shadow-lg transition-all scale-90 md:scale-100 origin-bottom">
+            <button
+              onClick={() => {
+                const prev = episodes[currentIndex - 1];
+                if (prev) handleEpisodeChange(prev.id);
+              }}
+              disabled={currentIndex <= 0}
+              className="p-1.5 md:p-2 rounded-full text-white disabled:opacity-30 hover:bg-white/10 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 md:w-6 md:h-6" />
+            </button>
+
+            <span className="text-white font-medium text-xs md:text-sm tabular-nums min-w-[60px] md:min-w-[80px] text-center">
+              Ep {currentEpisodeData ? currentEpisodeData.index + 1 : 1} / {totalEpisodes}
+            </span>
+
+            <button
+              onClick={() => {
+                const next = episodes[currentIndex + 1];
+                if (next) handleEpisodeChange(next.id);
+              }}
+              disabled={currentIndex >= totalEpisodes - 1}
+              className="p-1.5 md:p-2 rounded-full text-white disabled:opacity-30 hover:bg-white/10 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 md:w-6 md:h-6" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Episode List Sidebar */}
       {showEpisodeList && (
         <>
-          <div 
+          <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
             onClick={() => setShowEpisodeList(false)}
           />
@@ -294,8 +312,8 @@ export default function FlickReelsWatchPage() {
                   onClick={() => handleEpisodeChange(ep.id)}
                   className={cn(
                     "aspect-square flex items-center justify-center rounded-lg text-sm font-medium transition-all",
-                    ep.id === activeVideoId 
-                      ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                    ep.id === activeVideoId
+                      ? "bg-primary text-white shadow-lg shadow-primary/20"
                       : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
                   )}
                 >
