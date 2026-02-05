@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 
 interface NetShortDrama {
   shortPlayId: string;
@@ -79,6 +79,20 @@ export function useNetShortForYou(page = 1) {
     queryKey: ["netshort", "foryou", page],
     queryFn: () => fetchJson<ForYouResponse>(`/api/netshort/foryou?page=${page}`),
     staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}
+
+export function useInfiniteNetShortDramas() {
+  return useInfiniteQuery<ForYouResponse>({
+    queryKey: ["netshort", "foryou", "infinite"],
+    queryFn: ({ pageParam = 1 }) => fetchJson<ForYouResponse>(`/api/netshort/foryou?page=${pageParam}`),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      // Check API completed flag or page limit
+      if (lastPage.completed || allPages.length >= 100) return undefined;
+      return allPages.length + 1;
+    },
+    staleTime: 5 * 60 * 1000,
   });
 }
 

@@ -7,14 +7,15 @@ import { NetShortHome } from "@/components/NetShortHome";
 import { MeloloHome } from "@/components/MeloloHome";
 import { FlickReelsHome } from "@/components/FlickReelsHome";
 import { FreeReelsHome } from "@/components/FreeReelsHome";
-import { useForYouDramas, useLatestDramas, useTrendingDramas, useDubindoDramas } from "@/hooks/useDramas";
+import { useLatestDramas, useTrendingDramas, useDubindoDramas } from "@/hooks/useDramas";
 import { usePlatform } from "@/hooks/usePlatform";
+import { InfiniteDramaSection } from "@/components/InfiniteDramaSection";
 
 export default function HomeContent() {
   const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels } = usePlatform();
 
   // Fetch data for all DramaBox sections
-  const { data: popularDramas, isLoading: loadingPopular, error: errorPopular, refetch: refetchPopular } = useForYouDramas();
+  // const { data: popularDramas, isLoading: loadingPopular, error: errorPopular, refetch: refetchPopular } = useForYouDramas(); // REMOVED as requested (replaced by infinite scroll)
   const { data: latestDramas, isLoading: loadingLatest, error: errorLatest, refetch: refetchLatest } = useLatestDramas();
   const { data: trendingDramas, isLoading: loadingTrending, error: errorTrending, refetch: refetchTrending } = useTrendingDramas();
   const { data: dubindoDramas, isLoading: loadingDubindo, error: errorDubindo, refetch: refetchDubindo } = useDubindoDramas();
@@ -31,13 +32,6 @@ export default function HomeContent() {
       {/* DramaBox Content - Multiple Sections */}
       {isDramaBox && (
         <div className="container mx-auto px-4 py-6 space-y-8">
-          <DramaSection
-            title="Populer"
-            dramas={popularDramas}
-            isLoading={loadingPopular}
-            error={!!errorPopular}
-            onRetry={() => refetchPopular()}
-          />
           <DramaSection
             title="Terbaru"
             dramas={latestDramas}
@@ -59,6 +53,9 @@ export default function HomeContent() {
             error={!!errorDubindo}
             onRetry={() => refetchDubindo()}
           />
+
+          {/* Infinite Scroll Section */}
+          <InfiniteDramaSection title="Lainnya" />
         </div>
       )}
 

@@ -1,9 +1,41 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import type { Drama, SearchResult } from "@/types/drama";
 
 const API_BASE = "/api/dramabox";
 
 import { fetchJson } from "@/lib/fetcher";
+
+const REC_API_BASE = "/api/reelshort";
+
+// Infinite Scroll Hook for DramaBox "Lainnya"
+export function useInfiniteForYouDramas() {
+  return useInfiniteQuery({
+    queryKey: ["dramas", "foryou", "infinite"],
+    queryFn: ({ pageParam = 1 }) => fetchJson<Drama[]>(`${API_BASE}/foryou?page=${pageParam}`),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: Drama[], allPages: Drama[][]) => {
+        // Stop if we received no data or less than expected
+        // Also limit to 100 pages as requested
+        if (!lastPage || lastPage.length === 0 || allPages.length >= 100) return undefined;
+        return allPages.length + 1;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+// Infinite Scroll Hook for ReelShort "Lainnya"
+export function useInfiniteReelShortDramas() {
+  return useInfiniteQuery({
+    queryKey: ["reels", "foryou", "infinite"],
+    queryFn: ({ pageParam = 1 }) => fetchJson<Drama[]>(`${REC_API_BASE}/foryou?page=${pageParam}`),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: Drama[], allPages: Drama[][]) => {
+        if (!lastPage || lastPage.length === 0 || allPages.length >= 100) return undefined;
+        return allPages.length + 1;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+}
 
 // ... existing imports
 

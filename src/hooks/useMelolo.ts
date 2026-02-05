@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { fetchJson } from "@/lib/fetcher";
 
 // Interfaces based on Melolo JSON response
@@ -111,5 +111,21 @@ export function useMeloloStream(videoId: string) {
     enabled: !!videoId,
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
+  });
+}
+
+// Infinite Scroll Hook for Melolo
+export function useInfiniteMeloloDramas() {
+  return useInfiniteQuery<MeloloResponse>({
+    queryKey: ["melolo", "foryou", "infinite"],
+    queryFn: ({ pageParam = 0 }) => fetchJson<MeloloResponse>(`/api/melolo/foryou?offset=${pageParam}`),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.has_more && lastPage.next_offset !== undefined) {
+          return lastPage.next_offset;
+      }
+      return undefined;
+    },
+    staleTime: 5 * 60 * 1000,
   });
 }

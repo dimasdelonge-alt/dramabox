@@ -1,10 +1,11 @@
 "use client";
 
-import { useFlickReelsForYou, useFlickReelsLatest, useFlickReelsHotRank } from "@/hooks/useFlickReels";
+import { useFlickReelsLatest, useFlickReelsHotRank } from "@/hooks/useFlickReels";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { AlertCircle } from "lucide-react";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
+import { InfiniteFlickReelsSection } from "./InfiniteFlickReelsSection";
 
 // Helper Component for Section Skeleton
 function SectionLoader({ count = 6, titleWidth = "w-48" }: { count?: number, titleWidth?: string }) {
@@ -24,12 +25,7 @@ function SectionLoader({ count = 6, titleWidth = "w-48" }: { count?: number, tit
 }
 
 export function FlickReelsHome() {
-  const { 
-    data: forYouData, 
-    isLoading: loadingForYou, 
-    error: errorForYou, 
-    refetch: refetchForYou 
-  } = useFlickReelsForYou();
+
 
   const { 
     data: latestData, 
@@ -45,11 +41,10 @@ export function FlickReelsHome() {
     refetch: refetchHotRank 
   } = useFlickReelsHotRank();
 
-  if (errorForYou || errorLatest || errorHotRank) {
+  if (errorLatest || errorHotRank) {
     return (
       <UnifiedErrorDisplay 
         onRetry={() => {
-          if (errorForYou) refetchForYou();
           if (errorLatest) refetchLatest();
           if (errorHotRank) refetchHotRank();
         }} 
@@ -60,35 +55,6 @@ export function FlickReelsHome() {
   return (
     <div className="space-y-12 pb-20">
       
-      {/* SECTION: For You / Rekomendasi */}
-      {loadingForYou ? (
-        <SectionLoader count={12} titleWidth="w-56" />
-      ) : (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display font-bold text-xl md:text-2xl text-foreground">
-              Rekomendasi Untukmu
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-            {forYouData?.data?.list
-              ?.filter(item => item.title && item.cover && item.title !== "Untitled")
-              .map((item, idx) => (
-              <UnifiedMediaCard
-                key={`${item.playlet_id}-${idx}`}
-                title={item.title}
-                cover={item.cover}
-                link={`/detail/flickreels/${item.playlet_id}`}
-                episodes={item.upload_num ? parseInt(item.upload_num) : 0}
-                topRightBadge={item.hot_num ? { text: item.hot_num, isTransparent: true } : null}
-                topLeftBadge={item.status === "2" ? { text: "Ongoing", color: "#EAB308" } : null}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* SECTION: Hot Rank / Peringkat Populer */}
       {loadingHotRank ? (
          <SectionLoader count={6} titleWidth="w-40" />
@@ -147,6 +113,9 @@ export function FlickReelsHome() {
           </section>
         ))
       )}
+
+      {/* SECTION: Infinite Scroll / Lainnya */}
+      <InfiniteFlickReelsSection title="Lainnya" />
 
     </div>
   );

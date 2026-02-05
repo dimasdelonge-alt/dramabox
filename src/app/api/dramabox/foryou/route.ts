@@ -1,11 +1,16 @@
 import { safeJson, encryptedResponse } from "@/lib/api-utils";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 
 const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/dramabox";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const response = await fetch(`${UPSTREAM_API}/foryou`, {
+    const searchParams = request.nextUrl.searchParams;
+    const page = searchParams.get("page") || "1";
+    
+    const response = await fetch(`${UPSTREAM_API}/foryou?page=${page}`, {
       cache: 'no-store',
     });
     if (!response.ok) {

@@ -46,7 +46,7 @@ export function Footer() {
 
           {/* Copyright */}
           <p className="text-xs text-muted-foreground/80 text-center font-medium">
-            © {new Date().getFullYear()} Made with ❤️ by Yusril
+            © {new Date().getFullYear()}
           </p>
         </div>
       </div>

@@ -4,6 +4,7 @@
 import { useMeloloLatest, useMeloloTrending } from "@/hooks/useMelolo";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
+import { InfiniteMeloloSection } from "./InfiniteMeloloSection";
 
 function MeloloSectionSkeleton() {
   return (
@@ -102,6 +103,9 @@ export function MeloloHome() {
           </div>
         </section>
       )}
+
+      {/* Infinite Scroll Section */}
+      <InfiniteMeloloSection title="Lainnya" />
 
       {!loadingLatest && !loadingTrending && !latestData?.books?.length && !trendingData?.books?.length && (
          <div className="text-center py-20 text-muted-foreground">

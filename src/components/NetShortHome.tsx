@@ -4,6 +4,7 @@ import { useNetShortTheaters, useNetShortForYou } from "@/hooks/useNetShort";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
+import { InfiniteNetShortSection } from "./InfiniteNetShortSection";
 
 // ... existing emoji stripper ...
 function stripEmoji(text: string): string {
@@ -125,6 +126,9 @@ export function NetShortHome() {
           </div>
         </section>
       ))}
+
+      {/* Infinite Scroll Section */}
+      <InfiniteNetShortSection title="Lainnya" />
     </div>
   );
 }

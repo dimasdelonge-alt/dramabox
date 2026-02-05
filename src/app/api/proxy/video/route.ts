@@ -49,12 +49,54 @@ function streamToBuffer(stream: http.IncomingMessage): Promise<Buffer> {
 }
 
 // Helper: Convert Node stream to Web ReadableStream (for streaming response)
+// With proper error handling to prevent "Controller is already closed" errors
 function nodeToWebStream(nodeStream: http.IncomingMessage): ReadableStream {
+    let isClosed = false;
+    
     return new ReadableStream({
         start(controller) {
-            nodeStream.on('data', (chunk) => controller.enqueue(chunk));
-            nodeStream.on('end', () => controller.close());
-            nodeStream.on('error', (err) => controller.error(err));
+            const safeClose = () => {
+                if (!isClosed) {
+                    isClosed = true;
+                    try {
+                        controller.close();
+                    } catch (e) {
+                        // Controller already closed, ignore
+                    }
+                }
+            };
+            
+            const safeError = (err: Error) => {
+                if (!isClosed) {
+                    isClosed = true;
+                    try {
+                        controller.error(err);
+                    } catch (e) {
+                        // Controller already closed, ignore
+                    }
+                }
+            };
+            
+            nodeStream.on('data', (chunk) => {
+                if (!isClosed) {
+                    try {
+                        controller.enqueue(chunk);
+                    } catch (e) {
+                        // Controller closed (client disconnected), cleanup
+                        isClosed = true;
+                        nodeStream.destroy();
+                    }
+                }
+            });
+            
+            nodeStream.on('end', safeClose);
+            nodeStream.on('error', safeError);
+            nodeStream.on('close', safeClose); // Handle abrupt close
+        },
+        cancel() {
+            // Called when the consumer cancels the stream (e.g., client disconnects)
+            isClosed = true;
+            nodeStream.destroy();
         }
     });
 }

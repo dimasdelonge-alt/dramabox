@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { fetchJson } from "@/lib/fetcher";
 
 // Interfaces based on FreeReels JSON response
@@ -33,6 +33,10 @@ export interface FreeReelsForYouResponse {
   message: string;
   data: {
     items: FreeReelsItem[];
+    page_info?: {
+       next: string;
+       has_more: boolean;
+    };
   };
 }
 
@@ -69,6 +73,24 @@ export function useFreeReelsForYou() {
   return useQuery<FreeReelsForYouResponse>({
     queryKey: ["freereels", "foryou"],
     queryFn: () => fetchJson<FreeReelsForYouResponse>("/api/freereels/foryou"),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useInfiniteFreeReelsDramas() {
+  return useInfiniteQuery<FreeReelsForYouResponse>({
+    queryKey: ["freereels", "foryou", "infinite"],
+    queryFn: ({ pageParam = 0 }) => fetchJson<FreeReelsForYouResponse>(`/api/freereels/foryou?offset=${pageParam}`),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+        // User requested multiples of 20 (0, 20, 40...)
+        if (lastPage.data?.page_info?.has_more) {
+             const nextOffset = allPages.length * 20;
+             if (nextOffset >= 100) return undefined; // safety limit
+             return nextOffset;
+        }
+        return undefined;
+    },
     staleTime: 5 * 60 * 1000,
   });
 }

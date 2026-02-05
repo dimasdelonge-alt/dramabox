@@ -1,10 +1,11 @@
 
 "use client";
 
-import { useFreeReelsForYou, useFreeReelsHome, useFreeReelsAnime, FreeReelsModule, FreeReelsItem } from "@/hooks/useFreeReels";
+import { useFreeReelsHome, useFreeReelsAnime, FreeReelsModule, FreeReelsItem } from "@/hooks/useFreeReels";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedMediaCardSkeleton } from "./UnifiedMediaCardSkeleton";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
+import { InfiniteFreeReelsSection } from "./InfiniteFreeReelsSection";
 
 // Helper to extract items from a module, handling special cases like 'recommend'
 function getModuleItems(module: FreeReelsModule): FreeReelsItem[] {
@@ -42,12 +43,7 @@ function cleanTitle(title: string): string {
 }
 
 export function FreeReelsHome() {
-  const { 
-    data: forYouData, 
-    isLoading: loadingForYou, 
-    error: errorForYou, 
-    refetch: refetchForYou 
-  } = useFreeReelsForYou();
+
 
   const { 
     data: homeData, 
@@ -63,11 +59,10 @@ export function FreeReelsHome() {
     refetch: refetchAnime 
   } = useFreeReelsAnime();
 
-  if (errorForYou && errorHome && errorAnime) {
+  if (errorHome && errorAnime) {
     return (
       <UnifiedErrorDisplay 
         onRetry={() => {
-          if (errorForYou) refetchForYou();
           if (errorHome) refetchHome();
           if (errorAnime) refetchAnime();
         }} 
@@ -78,35 +73,6 @@ export function FreeReelsHome() {
   return (
     <div className="space-y-8 pb-20">
       
-      {/* SECTION: For You / Rekomendasi */}
-      {loadingForYou ? (
-        <SectionLoader count={12} titleWidth="w-56" />
-      ) : (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display font-bold text-xl md:text-2xl text-foreground">
-              Rekomendasi Untukmu
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-            {forYouData?.data?.items
-              ?.filter(item => item.title && item.cover)
-              .map((item, idx) => (
-              <UnifiedMediaCard
-                key={`${item.key}-foryou-${idx}`}
-                title={item.title}
-                cover={item.cover}
-                link={`/detail/freereels/${item.key}`}
-                episodes={item.episode_count || 0}
-                topRightBadge={item.follow_count ? { text: `${(item.follow_count / 1000).toFixed(1)}k`, isTransparent: true } : null}
-                topLeftBadge={null}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* SECTION: Homepage Modules */}
       {loadingHome ? (
         <SectionLoader count={6} titleWidth="w-40" />
@@ -121,17 +87,15 @@ export function FreeReelsHome() {
            const validItems = items.filter(item => item.title && item.cover);
            if (validItems.length === 0) return null;
 
-           const title = module.module_name ? cleanTitle(module.module_name) : "";
+           const title = (module.module_name ? cleanTitle(module.module_name) : "") || "Rekomendasi Untukmu";
 
            return (
             <section key={`home-module-${mIdx}`} className="space-y-4">
-              {title && (
-                <div className="flex items-center justify-between">
-                  <h2 className="font-display font-bold text-xl md:text-2xl text-foreground">
-                    {title}
-                  </h2>
-                </div>
-              )}
+              <div className="flex items-center justify-between">
+                <h2 className="font-display font-bold text-xl md:text-2xl text-foreground">
+                  {title}
+                </h2>
+              </div>
 
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
                 {validItems.map((item, idx) => (
@@ -197,6 +161,10 @@ export function FreeReelsHome() {
           </section>
         )
       )}
+
+      {/* SECTION: Infinite Scroll / Lainnya */}
+      <InfiniteFreeReelsSection title="Lainnya" />
+
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { useReelShortHomepage } from "@/hooks/useReelShort";
 import { BannerCarousel } from "./BannerCarousel";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
+import { InfiniteReelShortSection } from "./InfiniteReelShortSection";
 import type { ReelShortBook, ReelShortBanner } from "@/types/reelshort";
 
 export function ReelShortSection() {
@@ -101,6 +102,10 @@ export function ReelShortSection() {
           </div>
         </section>
       ))}
+
+      {/* Infinite Scroll Section */}
+      <InfiniteReelShortSection title="Lainnya" />
+
     </div>
   );
 }

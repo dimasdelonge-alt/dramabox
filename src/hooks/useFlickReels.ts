@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { fetchJson } from "@/lib/fetcher";
 
 // Interfaces based on FlickReels JSON response
@@ -122,5 +122,20 @@ export function useFlickReelsDetail(bookId: string) {
     enabled: !!bookId,
     staleTime: 10 * 1000, // 10 seconds - video URLs have time-limited tokens
     gcTime: 30 * 1000, // Garbage collect after 30 seconds
+  });
+}
+
+// Infinite Scroll Hook for FlickReels
+export function useInfiniteFlickReelsDramas() {
+  return useInfiniteQuery<FlickReelsForYouResponse>({
+    queryKey: ["flickreels", "foryou", "infinite"],
+    queryFn: ({ pageParam = 1 }) => fetchJson<FlickReelsForYouResponse>(`/api/flickreels/foryou?page=${pageParam}`),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+        const list = lastPage.data?.list || [];
+        if (list.length === 0 || allPages.length >= 100) return undefined; // Limit to 100 pages as 'mentok 100' implies? Or just safe limit
+        return allPages.length + 1;
+    },
+    staleTime: 5 * 60 * 1000,
   });
 }
