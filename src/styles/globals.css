@@ -6,54 +6,61 @@
 
 @layer base {
   :root {
-    /* Sky Blue & White Theme */
-    --background: 200 100% 97%; /* Very pale sky blue */
-    --foreground: 222 47% 11%;  /* Dark blue text */
+    /* Night Sky Theme (Dark Slate + Sky Blue) */
+    --background: 222 47% 11%;
+    /* Deep Slate Blue (Night Sky) */
+    --foreground: 210 40% 98%;
+    /* Soft Cloud White */
 
-    --card: 0 0% 100%;          /* White */
-    --card-foreground: 222 47% 11%;
+    --card: 217 33% 17%;
+    /* Lighter Slate for Cards */
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 199 89% 48%;     /* Vibrant Sky Blue #0ea5e9 */
+    --primary: 199 89% 48%;
+    /* Vibrant Sky Blue #0ea5e9 (Keep distinct) */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 98% 39%;   /* Deep Sky Blue */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 180 100% 50%;
+    /* Cyan for secondary accents */
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 96%;       /* Alice Blue */
-    --muted-foreground: 215 16% 47%;
+    --muted: 215 25% 27%;
+    /* Muted Slate */
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 180 100% 50%;     /* Cyan/Turquoise */
-    --accent-foreground: 222 47% 11%;
+    --accent: 199 89% 48%;
+    /* Sky Blue Accent */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
     --ring: 199 89% 48%;
 
     --radius: 1rem;
 
-    /* Custom gradients (Sky Theme) */
+    /* Custom gradients (Night Sky) */
     --gradient-primary: linear-gradient(135deg, hsl(199, 89%, 48%) 0%, hsl(180, 100%, 50%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(200, 100%, 98%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(217, 33%, 20%) 0%, hsl(217, 33%, 15%) 100%);
     --gradient-glow: radial-gradient(ellipse at center, hsl(199, 89%, 48%, 0.15) 0%, transparent 70%);
-    --gradient-hero: linear-gradient(180deg, hsl(200, 100%, 90%) 0%, hsl(0, 0%, 100%) 50%, hsl(200, 100%, 95%) 100%);
-    
-    /* Shadows */
+    --gradient-hero: linear-gradient(180deg, hsl(222, 47% 11%) 0%, hsl(220, 40%, 15%) 50%, hsl(222, 47%, 11%) 100%);
+
+    /* Shadows - Glowy for Dark Mode */
     --shadow-card: 0 8px 32px -8px hsl(199, 89%, 48%, 0.15);
     --shadow-glow: 0 0 40px hsl(199, 89%, 48%, 0.2);
 
-    --sidebar-background: 200 100% 98%;
-    --sidebar-foreground: 222 47% 11%;
+    --sidebar-background: 222 47% 13%;
+    --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 199 89% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
+    --sidebar-accent: 215 25% 27%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 20%;
     --sidebar-ring: 199 89% 48%;
   }
 }
@@ -70,7 +77,12 @@
     background-attachment: fixed;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
   }
 
@@ -80,24 +92,24 @@
     background-color: rgba(0, 0, 0, 0.7) !important;
     color: white !important;
     font-family: 'Space Grotesk', system-ui, sans-serif !important;
-    
+
     /* Responsive: Min 16px, dynamic growth, Max 24px */
-    font-size: clamp(16px, 4vw, 24px) !important; 
-    line-height: 1.4 !important; 
+    font-size: clamp(16px, 4vw, 24px) !important;
+    line-height: 1.4 !important;
     padding: 2px 8px !important;
-    
+
     /* Layout: Strict 80% width relative to video area */
     width: auto !important;
     max-width: 80% !important;
     white-space: pre-wrap !important;
     overflow-wrap: break-word !important;
     word-break: break-word !important;
-    
+
     margin: 0 auto !important;
     text-align: center !important;
-    
+
     /* Force container lift for Webkit/Blink (Chrome, Edge, Safari) */
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   }
 
   /* Force container lift for Webkit/Blink */
@@ -113,12 +125,13 @@
       line-height: 1.3 !important;
       padding: 4px 8px !important;
       max-width: 95% !important;
-      background-color: rgba(0, 0, 0, 0.6) !important; /* Slightly more transparent like typical apps */
+      background-color: rgba(0, 0, 0, 0.6) !important;
+      /* Slightly more transparent like typical apps */
       text-shadow: 1px 1px 2px black !important;
     }
-    
+
     video::-webkit-media-text-track-container {
-        transform: translateY(-15%) !important;
+      transform: translateY(-15%) !important;
     }
   }
 }
@@ -166,13 +179,11 @@
   }
 
   .tag-pill {
-    @apply px-3 py-1 text-xs font-medium rounded-full bg-muted/80 text-muted-foreground 
-           hover:bg-primary/20 hover:text-primary transition-colors duration-200;
+    @apply px-3 py-1 text-xs font-medium rounded-full bg-muted/80 text-muted-foreground hover:bg-primary/20 hover:text-primary transition-colors duration-200;
   }
 
   .nav-link {
-    @apply relative px-4 py-2 text-sm font-medium text-muted-foreground 
-           hover:text-foreground transition-colors duration-200;
+    @apply relative px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200;
   }
 
   .nav-link.active {
@@ -186,10 +197,7 @@
   }
 
   .search-input {
-    @apply w-full bg-muted/50 border border-border/50 rounded-2xl px-5 py-3 
-           text-foreground placeholder:text-muted-foreground
-           focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20
-           transition-all duration-300;
+    @apply w-full bg-muted/50 border border-border/50 rounded-2xl px-5 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300;
   }
 
   .badge-popular {
@@ -198,8 +206,7 @@
   }
 
   .episode-count {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium 
-           bg-background/80 backdrop-blur-sm rounded-lg;
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-background/80 backdrop-blur-sm rounded-lg;
   }
 
   .play-count {
@@ -221,6 +228,7 @@
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -232,6 +240,7 @@
       opacity: 0;
       transform: scale(0.95);
     }
+
     to {
       opacity: 1;
       transform: scale(1);
