@@ -45,11 +45,11 @@ export function Header() {
     isFreeReels ? normalizedQuery : ""
   );
 
-  const isSearching = isDramaBox 
-    ? isSearchingDramaBox 
-    : isReelShort 
-      ? isSearchingReelShort 
-      : isNetShort 
+  const isSearching = isDramaBox
+    ? isSearchingDramaBox
+    : isReelShort
+      ? isSearchingReelShort
+      : isNetShort
         ? isSearchingNetShort
         : isMelolo
           ? isSearchingMelolo
@@ -58,15 +58,15 @@ export function Header() {
             : isSearchingFreeReels;
 
   // Search results processing
-  const searchResults = isDramaBox 
-    ? dramaBoxResults 
-    : isReelShort 
-      ? reelShortResults?.data 
+  const searchResults = isDramaBox
+    ? dramaBoxResults
+    : isReelShort
+      ? reelShortResults?.data
       : isNetShort
         ? netShortResults?.data
         : isMelolo
           ? meloloResults?.data?.search_data?.flatMap((item: any) => item.books || [])
-              .filter((book: any) => book.thumb_url && book.thumb_url !== "") || []
+            .filter((book: any) => book.thumb_url && book.thumb_url !== "") || []
           : isFlickReels
             ? flickReelsResults?.data
             : freeReelsResults;
@@ -299,8 +299,8 @@ export function Header() {
                         <div className="w-16 h-24 bg-muted rounded-xl flex-shrink-0 overflow-hidden">
                           {book.thumb_url ? (
                             <img
-                              src={book.thumb_url.includes(".heic") 
-                                ? `https://wsrv.nl/?url=${encodeURIComponent(book.thumb_url)}&output=jpg` 
+                              src={book.thumb_url.includes(".heic")
+                                ? `https://wsrv.nl/?url=${encodeURIComponent(book.thumb_url)}&output=jpg`
                                 : book.thumb_url}
                               alt={book.book_name}
                               className="w-full h-full object-cover"
@@ -322,9 +322,9 @@ export function Header() {
                           )}
                           {book.stat_infos && book.stat_infos.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 mt-2">
-                               <span className="tag-pill text-[10px]">
-                                  {book.stat_infos[0]}
-                               </span>
+                              <span className="tag-pill text-[10px]">
+                                {book.stat_infos[0]}
+                              </span>
                             </div>
                           )}
                         </div>

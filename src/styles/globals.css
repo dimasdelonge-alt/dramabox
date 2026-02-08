@@ -6,54 +6,55 @@
 
 @layer base {
   :root {
-    --background: 250 15% 8%;
-    --foreground: 0 0% 98%;
+    /* Sky Blue & White Theme */
+    --background: 200 100% 97%; /* Very pale sky blue */
+    --foreground: 222 47% 11%;  /* Dark blue text */
 
-    --card: 250 15% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;          /* White */
+    --card-foreground: 222 47% 11%;
 
-    --popover: 250 15% 10%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 280 100% 70%;
+    --primary: 199 89% 48%;     /* Vibrant Sky Blue #0ea5e9 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 320 100% 65%;
+    --secondary: 200 98% 39%;   /* Deep Sky Blue */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 250 15% 18%;
-    --muted-foreground: 250 10% 60%;
+    --muted: 210 40% 96%;       /* Alice Blue */
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 200 100% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 180 100% 50%;     /* Cyan/Turquoise */
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 250 15% 20%;
-    --input: 250 15% 20%;
-    --ring: 280 100% 70%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;
 
     --radius: 1rem;
 
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(280, 100%, 70%) 0%, hsl(320, 100%, 65%) 50%, hsl(350, 100%, 65%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(250, 15%, 14%) 0%, hsl(250, 15%, 10%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(280, 100%, 70%, 0.15) 0%, transparent 70%);
-    --gradient-hero: linear-gradient(180deg, hsl(250, 15%, 8%) 0%, hsl(280, 30%, 12%) 50%, hsl(250, 15%, 8%) 100%);
+    /* Custom gradients (Sky Theme) */
+    --gradient-primary: linear-gradient(135deg, hsl(199, 89%, 48%) 0%, hsl(180, 100%, 50%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(200, 100%, 98%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(199, 89%, 48%, 0.15) 0%, transparent 70%);
+    --gradient-hero: linear-gradient(180deg, hsl(200, 100%, 90%) 0%, hsl(0, 0%, 100%) 50%, hsl(200, 100%, 95%) 100%);
     
     /* Shadows */
-    --shadow-card: 0 8px 32px -8px hsl(280, 100%, 50%, 0.3);
-    --shadow-glow: 0 0 40px hsl(280, 100%, 70%, 0.4);
+    --shadow-card: 0 8px 32px -8px hsl(199, 89%, 48%, 0.15);
+    --shadow-glow: 0 0 40px hsl(199, 89%, 48%, 0.2);
 
-    --sidebar-background: 250 15% 10%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 280 100% 70%;
+    --sidebar-background: 200 100% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 199 89% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 15% 18%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 250 15% 20%;
-    --sidebar-ring: 280 100% 70%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 199 89% 48%;
   }
 }
 
