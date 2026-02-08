@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SekaiDrama</string>
+    <string name="title_activity_main">SekaiDrama</string>
+    <string name="package_name">com.sekaidrama.app</string>
+    <string name="custom_url_scheme">com.sekaidrama.app</string>
+</resources>

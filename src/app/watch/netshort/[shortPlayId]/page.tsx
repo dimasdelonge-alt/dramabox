@@ -7,6 +7,7 @@ import Link from "next/link";
 import SubtitleOverlay from "@/components/SubtitleOverlay";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Hls from "hls.js";
+import { VIDEO_PROXY_URL } from "@/lib/constants";
 
 export default function NetShortWatchPage() {
   const params = useParams<{ shortPlayId: string }>();
@@ -139,7 +140,7 @@ export default function NetShortWatchPage() {
   // Subtitle URL construction
   const subtitleUrl = useMemo(() => {
     return currentEpisodeData?.subtitleUrl
-      ? `/api/proxy/video?url=${encodeURIComponent(currentEpisodeData.subtitleUrl)}`
+      ? `${VIDEO_PROXY_URL}?url=${encodeURIComponent(currentEpisodeData.subtitleUrl)}`
       : "";
   }, [currentEpisodeData?.subtitleUrl]);
 

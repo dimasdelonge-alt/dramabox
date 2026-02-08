@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import SubtitleOverlay from "@/components/SubtitleOverlay";
+import { VIDEO_PROXY_URL } from "@/lib/constants";
 
 interface VideoQuality {
   name: string;
@@ -224,7 +225,7 @@ export default function MeloloWatchPage() {
             <>
               <video
                 ref={videoRef}
-                src={selectedQuality.url}
+                src={`${VIDEO_PROXY_URL}?url=${encodeURIComponent(selectedQuality.url)}`}
                 controls
                 autoPlay
                 playsInline

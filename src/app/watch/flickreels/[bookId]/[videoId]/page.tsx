@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Loader2, List, AlertCircle } from "lucide-re
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import SubtitleOverlay from "@/components/SubtitleOverlay";
+import { VIDEO_PROXY_URL } from "@/lib/constants";
 
 export default function FlickReelsWatchPage() {
   const params = useParams();
@@ -62,7 +63,7 @@ export default function FlickReelsWatchPage() {
     videoTimestamp.current = Date.now();
 
     const videoUrl = currentEpisodeData.raw.videoUrl;
-    const newSrc = `/api/proxy/video?url=${encodeURIComponent(videoUrl)}&referer=${encodeURIComponent("https://www.flickreels.com/")}&_t=${videoTimestamp.current}`;
+    const newSrc = `${VIDEO_PROXY_URL}?url=${encodeURIComponent(videoUrl)}&referer=${encodeURIComponent("https://www.flickreels.com/")}&_t=${videoTimestamp.current}`;
     const warmupUrl = `/api/proxy/warmup?url=${encodeURIComponent(videoUrl)}`;
 
     if (isInitialLoad.current) {
@@ -103,7 +104,7 @@ export default function FlickReelsWatchPage() {
   useEffect(() => {
     if (!videoReady || !currentEpisodeData?.raw?.videoUrl || !videoRef.current) return;
 
-    const newSrc = `/api/proxy/video?url=${encodeURIComponent(currentEpisodeData.raw.videoUrl)}&referer=${encodeURIComponent("https://www.flickreels.com/")}&_t=${videoTimestamp.current}`;
+    const newSrc = `${VIDEO_PROXY_URL}?url=${encodeURIComponent(currentEpisodeData.raw.videoUrl)}&referer=${encodeURIComponent("https://www.flickreels.com/")}&_t=${videoTimestamp.current}`;
 
     // Check if src needs update
     if (videoRef.current.src !== newSrc && !videoRef.current.src.endsWith(newSrc.split('?')[1])) {
@@ -236,7 +237,7 @@ export default function FlickReelsWatchPage() {
               referrerPolicy="no-referrer"
             />
             <SubtitleOverlay
-              url={currentEpisodeData?.raw?.videoUrl ? `/api/proxy/video?url=${encodeURIComponent(currentEpisodeData.raw.videoUrl)}&sub=true` : ""}
+              url={currentEpisodeData?.raw?.videoUrl ? `${VIDEO_PROXY_URL}?url=${encodeURIComponent(currentEpisodeData.raw.videoUrl)}&sub=true` : ""}
               currentTime={currentTime}
             />
           </>

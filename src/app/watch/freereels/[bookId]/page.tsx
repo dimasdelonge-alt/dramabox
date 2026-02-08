@@ -8,6 +8,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Hls from "hls.js";
 import SubtitleOverlay from "@/components/SubtitleOverlay";
+import { VIDEO_PROXY_URL } from "@/lib/constants";
 
 export default function FreeReelsWatchPage() {
   const params = useParams();
@@ -70,7 +71,7 @@ export default function FreeReelsWatchPage() {
 
   const proxiedSubtitleUrl = useMemo(() => {
     if (!currentEpisodeData?.subtitleUrl) return "";
-    return `/api/proxy/video?url=${encodeURIComponent(currentEpisodeData.subtitleUrl)}`;
+    return `${VIDEO_PROXY_URL}?url=${encodeURIComponent(currentEpisodeData.subtitleUrl)}`;
   }, [currentEpisodeData]);
 
   // Load video with HLS support
@@ -86,7 +87,7 @@ export default function FreeReelsWatchPage() {
     // : "";
 
     const videoUrl = useProxy
-      ? `/api/proxy/video?url=${encodeURIComponent(currentVideoUrl)}${subParam}`
+      ? `${VIDEO_PROXY_URL}?url=${encodeURIComponent(currentVideoUrl)}${subParam}`
       : currentVideoUrl;
 
     const video = videoRef.current;
