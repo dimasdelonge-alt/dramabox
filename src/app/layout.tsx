@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "NunoDrama - Streaming Drama Pendek",
   description: "Nonton drama pendek gratis dan tanpa iklan di NunoDrama.",
   icons: {
-    icon: "https://api.iconify.design/noto:cat-face.svg",
+    icon: "/cat-favicon.png",
   }
 };
 
