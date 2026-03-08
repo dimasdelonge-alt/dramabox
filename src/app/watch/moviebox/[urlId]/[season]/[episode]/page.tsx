@@ -6,6 +6,7 @@ import { useMovieboxDetail, useMovieboxStream } from "@/hooks/useMoviebox";
 import { ChevronLeft, ChevronRight, List, AlertCircle, Settings } from "lucide-react";
 import Link from "next/link";
 import { UnifiedErrorDisplay } from "@/components/UnifiedErrorDisplay";
+import SubtitleOverlay from "@/components/SubtitleOverlay";
 
 export default function MovieboxWatchPage() {
     const params = useParams<{ urlId: string; season: string; episode: string }>();
@@ -14,6 +15,7 @@ export default function MovieboxWatchPage() {
     const [showQualityMenu, setShowQualityMenu] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [selectedQuality, setSelectedQuality] = useState<number | null>(null);
+    const [currentTime, setCurrentTime] = useState(0);
     const videoRef = useRef<HTMLVideoElement>(null);
 
     const subjectId = decodeURIComponent(params.urlId || "");
@@ -72,6 +74,15 @@ export default function MovieboxWatchPage() {
     const getProxiedSubUrl = (url: string) => {
         return `/api/proxy/video?url=${encodeURIComponent(url)}`;
     };
+
+    const activeSubtitleUrl = useMemo(() => {
+        if (!subtitles.length) return null;
+        // Auto select Indonesian, then English, then first available
+        const idSub = subtitles.find(s => s.lan === "in_id" || s.lan === "id");
+        const enSub = subtitles.find(s => s.lan === "en_us" || s.lan === "en" || s.lan === "en_gb");
+        const sub = idSub || enSub || subtitles[0];
+        return getProxiedSubUrl(sub.url);
+    }, [subtitles]);
 
     // Change quality while preserving playback position
     const handleQualityChange = useCallback((quality: number) => {
@@ -215,8 +226,8 @@ export default function MovieboxWatchPage() {
                                     key={source.id}
                                     onClick={() => handleQualityChange(source.quality)}
                                     className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-left ${source.quality === activeQuality
-                                            ? "bg-primary/20 text-primary"
-                                            : "text-white/80 hover:bg-white/10 hover:text-white"
+                                        ? "bg-primary/20 text-primary"
+                                        : "text-white/80 hover:bg-white/10 hover:text-white"
                                         }`}
                                 >
                                     <div className="flex items-center gap-2">
@@ -259,14 +270,14 @@ export default function MovieboxWatchPage() {
                         playsInline
                         onPlay={() => setIsPlaying(true)}
                         onPause={() => setIsPlaying(false)}
+                        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+                        className="w-full h-full"
                         style={{
-                            width: "100%",
-                            height: "100%",
                             backgroundColor: "#000",
                             objectFit: "contain",
                         }}
                     >
-                        {/* Subtitle tracks */}
+                        {/* Native subtitle tracks as fallback */}
                         {subtitles.map((sub) => (
                             <track
                                 key={sub.id}
@@ -278,6 +289,11 @@ export default function MovieboxWatchPage() {
                             />
                         ))}
                     </video>
+                )}
+
+                {/* Custom Subtitle Overlay */}
+                {activeSubtitleUrl && (
+                    <SubtitleOverlay url={activeSubtitleUrl} currentTime={currentTime} />
                 )}
             </div>
 
