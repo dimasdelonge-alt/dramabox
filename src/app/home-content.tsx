@@ -7,12 +7,14 @@ import { NetShortHome } from "@/components/NetShortHome";
 import { MeloloHome } from "@/components/MeloloHome";
 import { FlickReelsHome } from "@/components/FlickReelsHome";
 import { FreeReelsHome } from "@/components/FreeReelsHome";
+import { ShortMaxHome } from "@/components/ShortMaxHome";
+import { MovieboxHome } from "@/components/MovieboxHome";
 import { useLatestDramas, useTrendingDramas, useDubindoDramas } from "@/hooks/useDramas";
 import { usePlatform } from "@/hooks/usePlatform";
 import { InfiniteDramaSection } from "@/components/InfiniteDramaSection";
 
 export default function HomeContent() {
-  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels } = usePlatform();
+  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels, isShortMax, isMoviebox } = usePlatform();
 
   // Fetch data for all DramaBox sections
   // const { data: popularDramas, isLoading: loadingPopular, error: errorPopular, refetch: refetchPopular } = useForYouDramas(); // REMOVED as requested (replaced by infinite scroll)
@@ -91,6 +93,20 @@ export default function HomeContent() {
       {isFreeReels && (
         <div className="container mx-auto px-4 py-6 space-y-8">
           <FreeReelsHome />
+        </div>
+      )}
+
+      {/* ShortMax Content */}
+      {isShortMax && (
+        <div className="container mx-auto px-4 py-6 space-y-8">
+          <ShortMaxHome />
+        </div>
+      )}
+
+      {/* Moviebox Content */}
+      {isMoviebox && (
+        <div className="container mx-auto px-4 py-6 space-y-8">
+          <MovieboxHome />
         </div>
       )}
     </main>

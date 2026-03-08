@@ -32,16 +32,16 @@ export function Footer() {
           </ul> */}
 
           <p className="text-sm text-muted-foreground text-center">
-            API yang digunakan:{" "}
-            <a 
-                  href="https://api.sansekai.my.id" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 text-primary hover:underline font-semibold"
-                >
-                  SΛNSΞKΛI API
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+            Nuno Drama :{" "}
+            <a
+              href="https://www.instagram.com/arifdimass"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 text-primary hover:underline font-semibold"
+            >
+              By Nuno
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </p>
 
           {/* Copyright */}

@@ -11,6 +11,8 @@ import { useNetShortSearch } from "@/hooks/useNetShort";
 import { useMeloloSearch } from "@/hooks/useMelolo";
 import { useFlickReelsSearch } from "@/hooks/useFlickReels";
 import { useFreeReelsSearch } from "@/hooks/useFreeReels";
+import { useShortMaxSearch } from "@/hooks/useShortMax";
+import { useMovieboxSearch } from "@/hooks/useMoviebox";
 import { usePlatform } from "@/hooks/usePlatform";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePathname } from "next/navigation";
@@ -23,7 +25,7 @@ export function Header() {
   const normalizedQuery = debouncedQuery.trim();
 
   // Platform context
-  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels, platformInfo } = usePlatform();
+  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels, isShortMax, isMoviebox, platformInfo } = usePlatform();
 
   // Search based on platform
   const { data: dramaBoxResults, isLoading: isSearchingDramaBox } = useSearchDramas(
@@ -44,6 +46,12 @@ export function Header() {
   const { data: freeReelsResults, isLoading: isSearchingFreeReels } = useFreeReelsSearch(
     isFreeReels ? normalizedQuery : ""
   );
+  const { data: shortMaxResults, isLoading: isSearchingShortMax } = useShortMaxSearch(
+    isShortMax ? normalizedQuery : ""
+  );
+  const { data: movieboxResults, isLoading: isSearchingMoviebox } = useMovieboxSearch(
+    isMoviebox ? normalizedQuery : ""
+  );
 
   const isSearching = isDramaBox
     ? isSearchingDramaBox
@@ -55,7 +63,11 @@ export function Header() {
           ? isSearchingMelolo
           : isFlickReels
             ? isSearchingFlickReels
-            : isSearchingFreeReels;
+            : isFreeReels
+              ? isSearchingFreeReels
+              : isShortMax
+                ? isSearchingShortMax
+                : isSearchingMoviebox;
 
   // Search results processing
   const searchResults = isDramaBox
@@ -69,7 +81,11 @@ export function Header() {
             .filter((book: any) => book.thumb_url && book.thumb_url !== "") || []
           : isFlickReels
             ? flickReelsResults?.data
-            : freeReelsResults;
+            : isFreeReels
+              ? freeReelsResults
+              : isShortMax
+                ? shortMaxResults?.data
+                : movieboxResults?.items;
 
   const handleSearchClose = () => {
     setSearchOpen(false);
@@ -413,23 +429,106 @@ export function Header() {
                   </div>
                 )}
 
-                {searchResults && searchResults.length === 0 && normalizedQuery && (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">Tidak ada hasil untuk "{normalizedQuery}" di {platformInfo.name}</p>
+                {/* ShortMax Results */}
+                {isShortMax && searchResults && searchResults.length > 0 && (
+                  <div className="grid gap-3">
+                    {searchResults.map((item: any, index: number) => (
+                      <Link
+                        key={item.shortPlayCode || item.shortPlayId}
+                        href={`/detail/shortmax/${item.shortPlayCode || item.shortPlayId}`}
+                        onClick={handleSearchClose}
+                        className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <img
+                          src={item.cover}
+                          alt={item.title}
+                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display font-semibold text-foreground truncate">{item.title}</h3>
+                          {item.genre && item.genre.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {item.genre.slice(0, 3).map((tag: string, idx: number) => (
+                                <span key={idx} className="tag-pill text-[10px]">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
                   </div>
                 )}
 
-                {!normalizedQuery && (
-                  <div className="text-center py-12">
-                    <Search className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                    <p className="text-muted-foreground">Ketik untuk mencari drama di {platformInfo.name}</p>
+                {/* Moviebox Results */}
+                {isMoviebox && searchResults && searchResults.length > 0 && (
+                  <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 backdrop-blur-sm border-b border-white/5 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Play className="w-4 h-4 text-primary" />
+                      <h3 className="font-medium text-white/90">Moviebox search results</h3>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {searchResults.slice(0, 3).map((item: any) => {
+                        const title = item.title || "Unknown Title";
+                        const isMovie = item.subjectType === 1;
+                        return (
+                          <Link
+                            key={item.subjectId}
+                            href={`/detail/moviebox/${item.subjectId}`}
+                            onClick={handleSearchClose}
+                            className="flex items-start gap-3 p-2 hover:bg-white/10 rounded-lg transition-colors group"
+                          >
+                            <div className="relative w-12 h-16 flex-shrink-0 rounded overflow-hidden">
+                              <Image
+                                src={item.cover?.url || "/placeholder.jpg"}
+                                alt={title}
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-300"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm text-white group-hover:text-primary transition-colors truncate">
+                                {title}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-white/50">{item.releaseDate}</span>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${isMovie ? "bg-blue-500/20 text-blue-500 border border-blue-500/20" : "bg-yellow-500/20 text-yellow-500 border border-yellow-500/20"}`}>
+                                  {isMovie ? "MOVIE" : "SERIES"}
+                                </span>
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
-          </div>,
+
+                {
+                  searchResults && searchResults.length === 0 && normalizedQuery && (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground">Tidak ada hasil untuk "{normalizedQuery}" di {platformInfo.name}</p>
+                    </div>
+                  )
+                }
+
+                {
+                  !normalizedQuery && (
+                    <div className="text-center py-12">
+                      <Search className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                      <p className="text-muted-foreground">Ketik untuk mencari drama di {platformInfo.name}</p>
+                    </div>
+                  )
+                }
+              </div >
+            </div >
+          </div >,
           document.body
         )}
-    </header>
+    </header >
   );
 }

@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-export type Platform = "dramabox" | "reelshort" | "netshort" | "melolo" | "flickreels" | "freereels";
+export type Platform = "dramabox" | "reelshort" | "netshort" | "melolo" | "flickreels" | "freereels" | "shortmax" | "moviebox";
 
 export interface PlatformInfo {
   id: Platform;
@@ -48,6 +48,18 @@ export const PLATFORMS: PlatformInfo[] = [
     logo: "/freereels.webp",
     apiBase: "/api/freereels",
   },
+  {
+    id: "shortmax",
+    name: "ShortMax",
+    logo: "/shortmax.jpg",
+    apiBase: "/api/shortmax",
+  },
+  {
+    id: "moviebox",
+    name: "Moviebox",
+    logo: "/anime.png", // Keep previous logo file or provide a new one
+    apiBase: "/api/moviebox",
+  },
 ];
 
 interface PlatformState {
@@ -80,5 +92,7 @@ export function usePlatform() {
     isMelolo: currentPlatform === "melolo",
     isFlickReels: currentPlatform === "flickreels",
     isFreeReels: currentPlatform === "freereels",
+    isShortMax: currentPlatform === "shortmax",
+    isMoviebox: currentPlatform === "moviebox",
   };
 }
