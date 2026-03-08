@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, X, Play } from "lucide-react";
+import { Search, X, Play, LogOut } from "lucide-react";
 import { useSearchDramas } from "@/hooks/useDramas";
 import { useReelShortSearch } from "@/hooks/useReelShort";
 import { useNetShortSearch } from "@/hooks/useNetShort";
@@ -92,8 +92,8 @@ export function Header() {
     setSearchQuery("");
   };
 
-  // Hide header on watch pages for immersive video experience
-  if (pathname?.startsWith("/watch")) {
+  // Hide header on watch and login pages
+  if (pathname?.startsWith("/watch") || pathname === "/login") {
     return null;
   }
 
@@ -119,6 +119,17 @@ export function Header() {
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
+            </button>
+            <button
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                window.location.href = "/login";
+              }}
+              className="p-2.5 rounded-xl hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
+              aria-label="Logout"
+              title="Keluar"
+            >
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </div>
