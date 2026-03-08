@@ -57,10 +57,12 @@ export default function SubtitleOverlay({ url, currentTime }: SubtitleOverlayPro
 
     fetch(url)
       .then(res => {
+        console.log(`[Subtitle] Fetch response status: ${res.status} ${res.ok}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.text();
       })
       .then(text => {
+        console.log(`[Subtitle] Text received (first 50 chars): ${text.substring(0, 50).replace(/\n/g, ' ')}...`);
         const parsed: SubtitleCue[] = [];
         const lines = text.split(/\r?\n/);
         console.log(`[Subtitle] Loaded ${lines.length} lines`);
@@ -139,7 +141,7 @@ export default function SubtitleOverlay({ url, currentTime }: SubtitleOverlayPro
           className="bg-black/70 text-white text-base md:text-xl font-medium px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10"
           style={{ textShadow: "0 1px 3px rgba(0,0,0,1)" }}
         >
-          {activeCue.text.split('\n').map((line, idx) => (
+          {activeCue.text.replace(/<[^>]*>/g, '').split('\n').map((line, idx) => (
             <span key={idx} className="block leading-relaxed">{line}</span>
           ))}
         </span>

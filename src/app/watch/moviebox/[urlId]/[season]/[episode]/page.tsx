@@ -277,19 +277,7 @@ export default function MovieboxWatchPage() {
                             backgroundColor: "#000",
                             objectFit: "contain",
                         }}
-                    >
-                        {/* Native subtitle tracks as fallback */}
-                        {subtitles.map((sub) => (
-                            <track
-                                key={sub.id}
-                                kind="subtitles"
-                                src={getProxiedSubUrl(sub.url)}
-                                srcLang={sub.lan}
-                                label={sub.lanName}
-                                default={sub.lan === "in_id" || sub.lan === "id"}
-                            />
-                        ))}
-                    </video>
+                    />
                 )}
 
                 {/* Custom Subtitle Overlay */}
