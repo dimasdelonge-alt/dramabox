@@ -72,7 +72,7 @@ export default function MovieboxWatchPage() {
 
     // Proxy subtitle URLs through our video proxy to avoid CORS
     const getProxiedSubUrl = (url: string) => {
-        return `/api/proxy/video?url=${encodeURIComponent(url)}`;
+        return `/api/proxy/video?url=${encodeURIComponent(url)}&referer=${encodeURIComponent('https://api.sansekai.my.id/')}`;
     };
 
     const activeSubtitleUrl = useMemo(() => {
