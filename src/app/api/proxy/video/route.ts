@@ -246,7 +246,7 @@ export async function GET(req: NextRequest) {
             }
 
             vttContent = vttContent.replace(
-                /((?:\d{2}:)?\d{2}:\d{2}\.\d{3} --> (?:\d{2}:)?\d{2}:\d{2}\.\d{3})(.*)/g,
+                /((?:\d{2}:)?\d{2}:\d{2}\.\d{3}\s+-->\s+(?:\d{2}:)?\d{2}:\d{2}\.\d{3})(.*)/g,
                 (match, time, rest) => rest.includes("line:") ? match : `${time} line:75%${rest}`
             );
 

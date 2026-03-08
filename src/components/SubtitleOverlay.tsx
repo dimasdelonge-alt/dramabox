@@ -13,26 +13,30 @@ interface SubtitleCue {
   text: string;
 }
 
-// Convert VTT time string to seconds
-// Formats: "00:00:01.000" or "01.000"
+// Convert VTT/SRT time string to seconds
+// Formats: "00:00:01.000", "00:00:01,000", "01:02.000", etc.
 function parseVttTime(timeStr: string): number {
   if (!timeStr) return 0;
 
-  const parts = timeStr.replace('.', ':').split(':');
+  // Normalize: replace comma with dot, then split by colon or dot
+  const cleanStr = timeStr.trim().replace(',', '.');
+  const parts = cleanStr.split(/[:.]/);
 
   if (parts.length === 4) {
-    // HH:MM:SS:ms
+    // HH:MM:SS.ms
     return parseInt(parts[0]) * 3600 +
       parseInt(parts[1]) * 60 +
       parseInt(parts[2]) +
       parseInt(parts[3]) / 1000;
   } else if (parts.length === 3) {
-    // MM:SS:ms (sometimes used) or SS:ms? usually VTT is HH:MM:SS.mmm or MM:SS.mmm
-    // Standard VTT is MM:SS.mmm or HH:MM:SS.mmm
-    // Our split makes 00:00.000 -> ["00", "00", "000"]
+    // MM:SS.ms
     return parseInt(parts[0]) * 60 +
       parseInt(parts[1]) +
       parseInt(parts[2]) / 1000;
+  } else if (parts.length === 2) {
+    // SS.ms
+    return parseInt(parts[0]) +
+      parseInt(parts[1]) / 1000;
   }
 
   return 0;
