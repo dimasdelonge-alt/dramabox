@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useMovieboxDetail, useMovieboxStream } from "@/hooks/useMoviebox";
+import { useMovieboxDetail, useMovieboxStream, MovieboxSubtitle } from "@/hooks/useMoviebox";
 import { ChevronLeft, ChevronRight, List, AlertCircle, Settings } from "lucide-react";
 import Link from "next/link";
 import { UnifiedErrorDisplay } from "@/components/UnifiedErrorDisplay";
@@ -58,7 +58,6 @@ export default function MovieboxWatchPage() {
     // Active quality
     const activeQuality = selectedQuality ?? defaultQuality;
 
-    // Active video source URL
     const videoSource = useMemo(() => {
         if (!allSources.length || !activeQuality) return null;
         const source = allSources.find(s => s.quality === activeQuality) || allSources[0];
@@ -66,9 +65,9 @@ export default function MovieboxWatchPage() {
     }, [allSources, activeQuality]);
 
     const subtitles = useMemo(() => {
-        if (!streamData?.subtitles?.length) return [];
-        console.log(`[Moviebox] Found ${streamData.subtitles.length} subtitles`);
-        return streamData.subtitles;
+        const anyData = streamData as any;
+        const rawSubs = anyData?.subtitles || anyData?.captions || [];
+        return rawSubs as MovieboxSubtitle[];
     }, [streamData]);
 
     // Proxy subtitle URLs through our video proxy to avoid CORS
@@ -79,10 +78,10 @@ export default function MovieboxWatchPage() {
     const activeSubtitleUrl = useMemo(() => {
         if (!subtitles.length) return null;
         // Auto select Indonesian, then English, then first available
-        const idSub = subtitles.find(s => s.lan === "in_id" || s.lan === "id");
-        const enSub = subtitles.find(s => s.lan === "en_us" || s.lan === "en" || s.lan === "en_gb");
+        const idSub = subtitles.find(s => s.lan === "in_id" || s.lan === "id" || s.lanName?.toLowerCase().includes("indo"));
+        const enSub = subtitles.find(s => s.lan === "en_us" || s.lan === "en" || s.lanName?.toLowerCase().includes("eng"));
         const sub = idSub || enSub || subtitles[0];
-        console.log(`[Moviebox] Selected ${sub.lanName} subtitle: ${sub.url}`);
+        console.log(`[Moviebox] Active Sub: ${sub.lanName} (${sub.lan})`);
         return getProxiedSubUrl(sub.url);
     }, [subtitles]);
 

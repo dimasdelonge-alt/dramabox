@@ -96,7 +96,8 @@ export interface MovieboxSubtitle {
 
 export interface MovieboxStreamResponse {
     processedSources: MovieboxSource[];
-    subtitles: MovieboxSubtitle[];
+    subtitles?: MovieboxSubtitle[];
+    captions?: MovieboxSubtitle[];
 }
 
 // Hooks
