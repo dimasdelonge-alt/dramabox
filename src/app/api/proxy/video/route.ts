@@ -134,15 +134,20 @@ export async function GET(req: NextRequest) {
         const contentType = (upstreamRes.headers['content-type'] || "").toLowerCase();
         const lowUrl = finalUrl.toLowerCase();
 
-        // 2. Identify Type
+        // 2. Identify Type (Check final URL path AND original/final full URLs for robustness)
         const urlObj = new URL(finalUrl);
         const path = urlObj.pathname.toLowerCase();
+        const lowOrigUrl = url.toLowerCase();
+        const lowFinalUrl = finalUrl.toLowerCase();
 
         const isM3u8 = contentType.includes("application/vnd.apple.mpegurl") ||
             contentType.includes("application/x-mpegurl") ||
-            path.includes(".m3u8");
+            path.includes(".m3u8") || lowOrigUrl.includes(".m3u8") || lowFinalUrl.includes(".m3u8");
 
-        const isVtt = contentType.includes("text/vtt") || path.endsWith(".vtt") || path.endsWith(".srt");
+        const isVtt = contentType.includes("text/vtt") ||
+            path.endsWith(".vtt") || path.endsWith(".srt") ||
+            lowOrigUrl.includes(".vtt") || lowOrigUrl.includes(".srt") ||
+            lowFinalUrl.includes(".vtt") || lowFinalUrl.includes(".srt");
 
         // 3. IF BINARY (MP4, TS, etc) -> STREAM DIRECTLY
         if (!isM3u8 && !isVtt && (lowUrl.includes(".mp4") || lowUrl.includes(".ts") || contentType.includes("video/"))) {

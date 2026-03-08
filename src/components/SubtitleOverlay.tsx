@@ -44,70 +44,106 @@ function parseVttTime(timeStr: string): number {
 
 export default function SubtitleOverlay({ url, currentTime }: SubtitleOverlayProps) {
   const [cues, setCues] = useState<SubtitleCue[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!url) {
       setCues([]);
+      setError(null);
       return;
     }
 
+    console.log(`[Subtitle] Fetching: ${url}`);
+
     fetch(url)
-      .then(res => res.text())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      })
       .then(text => {
         const parsed: SubtitleCue[] = [];
         const lines = text.split(/\r?\n/);
+        console.log(`[Subtitle] Loaded ${lines.length} lines`);
 
         let i = 0;
         while (i < lines.length) {
           const line = lines[i].trim();
 
-          // Skip header/empty
-          if (!line || line === "WEBVTT") {
+          // Skip header, index numbers, or empty lines
+          if (!line || line === "WEBVTT" || /^\d+$/.test(line)) {
             i++;
             continue;
           }
 
-          // Check for timestamp line
+          // Check for timestamp line (e.g., 00:00:12,734 --> 00:00:13,986)
           if (line.includes("-->")) {
-            const [startStr, endStr] = line.split("-->").map(s => s.trim());
-            const start = parseVttTime(startStr);
-            // Remove visual settings if any (e.g., align:start line:0%)
-            const end = parseVttTime(endStr.split(' ')[0]);
+            const parts = line.split("-->");
+            if (parts.length < 2) {
+              i++;
+              continue;
+            }
 
-            // Get text lines until empty line
-            let text = "";
+            const startStr = parts[0].trim();
+            const endStr = parts[1].trim().split(/\s+/)[0]; // Take first part (ignore alignment settings)
+
+            const start = parseVttTime(startStr);
+            const end = parseVttTime(endStr);
+
+            // Get text lines until next cue or empty line
+            let cueText = "";
             i++;
-            while (i < lines.length && lines[i].trim() !== "") {
-              text += (text ? "\n" : "") + lines[i].trim();
+            while (i < lines.length) {
+              const nextLine = lines[i].trim();
+              if (nextLine === "" || nextLine.includes("-->") || /^\d+$/.test(nextLine)) {
+                break;
+              }
+              cueText += (cueText ? "\n" : "") + nextLine;
               i++;
             }
 
-            parsed.push({ start, end, text });
+            if (cueText) {
+              parsed.push({ start, end, text: cueText });
+            }
           } else {
             i++;
           }
         }
+        console.log(`[Subtitle] Parsed ${parsed.length} cues`);
         setCues(parsed);
+        setError(null);
       })
-      .catch(console.error);
+      .catch(err => {
+        console.error("[Subtitle] Error:", err.message);
+        setError(err.message);
+      });
   }, [url]);
 
   const activeCue = useMemo(() => {
-    return cues.find(cue => currentTime >= cue.start && currentTime <= cue.end);
+    if (cues.length === 0) return null;
+    const found = cues.find(cue => currentTime >= cue.start && currentTime <= cue.end);
+    return found;
   }, [cues, currentTime]);
 
-  if (!activeCue) return null;
+  if (!activeCue) {
+    if (error) {
+      // Don't show technical error UI, but it's logged to console
+      return null;
+    }
+    return null;
+  }
 
   return (
-    <div className="absolute bottom-[25%] left-0 right-0 px-4 text-center pointer-events-none z-30">
-      <span
-        className="inline-block bg-black/50 text-white text-base md:text-xl font-medium px-4 py-2 rounded-lg backdrop-blur-sm"
-        style={{ textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
-      >
-        {activeCue.text.split('\n').map((line, idx) => (
-          <span key={idx} className="block">{line}</span>
-        ))}
-      </span>
+    <div className="absolute bottom-[25%] left-0 right-0 px-4 text-center pointer-events-none z-30 select-none">
+      <div className="flex justify-center">
+        <span
+          className="bg-black/70 text-white text-base md:text-xl font-medium px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10"
+          style={{ textShadow: "0 1px 3px rgba(0,0,0,1)" }}
+        >
+          {activeCue.text.split('\n').map((line, idx) => (
+            <span key={idx} className="block leading-relaxed">{line}</span>
+          ))}
+        </span>
+      </div>
     </div>
   );
 }

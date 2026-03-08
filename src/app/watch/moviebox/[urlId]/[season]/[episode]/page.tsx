@@ -67,6 +67,7 @@ export default function MovieboxWatchPage() {
 
     const subtitles = useMemo(() => {
         if (!streamData?.subtitles?.length) return [];
+        console.log(`[Moviebox] Found ${streamData.subtitles.length} subtitles`);
         return streamData.subtitles;
     }, [streamData]);
 
@@ -81,6 +82,7 @@ export default function MovieboxWatchPage() {
         const idSub = subtitles.find(s => s.lan === "in_id" || s.lan === "id");
         const enSub = subtitles.find(s => s.lan === "en_us" || s.lan === "en" || s.lan === "en_gb");
         const sub = idSub || enSub || subtitles[0];
+        console.log(`[Moviebox] Selected ${sub.lanName} subtitle: ${sub.url}`);
         return getProxiedSubUrl(sub.url);
     }, [subtitles]);
 
