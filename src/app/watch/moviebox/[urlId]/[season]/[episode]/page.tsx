@@ -183,6 +183,17 @@ export default function MovieboxWatchPage() {
 
     return (
         <main className="fixed inset-0 bg-black flex flex-col">
+            {/* Hide native fullscreen button to encourage using our custom one with subtitles */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                video::-webkit-media-controls-fullscreen-button {
+                    display: none !important;
+                }
+                video::-internal-media-controls-fullscreen-button {
+                    display: none !important;
+                }
+            `}} />
+
             {/* Header Overlay */}
             <div className={`absolute top-0 left-0 right-0 z-30 h-16 transition-opacity duration-300 ${isPlaying && !showEpisodeList && !showQualityMenu ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}`}>
                 <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-transparent pointer-events-none" />
