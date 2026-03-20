@@ -323,6 +323,12 @@ export default function MovieboxWatchPage() {
                         onPlay={() => setIsPlaying(true)}
                         onPause={() => setIsPlaying(false)}
                         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+                        onDoubleClick={(e) => {
+                            // Hijack native double click to use our container fullscreen instead
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleFullscreen();
+                        }}
                         className="w-full h-full"
                         style={{
                             backgroundColor: "#000",
