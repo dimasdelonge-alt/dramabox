@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMovieboxDetail, useMovieboxStream, MovieboxSubtitle } from "@/hooks/useMoviebox";
-import { ChevronLeft, ChevronRight, List, AlertCircle, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, List, AlertCircle, Settings, Maximize, Minimize } from "lucide-react";
 import Link from "next/link";
 import { UnifiedErrorDisplay } from "@/components/UnifiedErrorDisplay";
 import SubtitleOverlay from "@/components/SubtitleOverlay";
@@ -17,6 +17,29 @@ export default function MovieboxWatchPage() {
     const [selectedQuality, setSelectedQuality] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState(0);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    // Monitor fullscreen changes
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    }, []);
+
+    const toggleFullscreen = useCallback(() => {
+        if (!containerRef.current) return;
+
+        if (!document.fullscreenElement) {
+            containerRef.current.requestFullscreen().catch((err) => {
+                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }, []);
 
     const subjectId = decodeURIComponent(params.urlId || "");
     const seasonStr = decodeURIComponent(params.season || "1");
@@ -197,6 +220,19 @@ export default function MovieboxWatchPage() {
                                 </span>
                             </button>
                         )}
+                        {/* Fullscreen button */}
+                        <button
+                            onClick={toggleFullscreen}
+                            className="p-2 text-white/90 hover:text-white transition-colors rounded-full hover:bg-white/10"
+                            title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
+                        >
+                            {isFullscreen ? (
+                                <Minimize className="w-5 h-5 drop-shadow-md" />
+                            ) : (
+                                <Maximize className="w-5 h-5 drop-shadow-md" />
+                            )}
+                        </button>
+
                         {/* Episode list button */}
                         {!isMovie && (
                             <button
@@ -251,7 +287,11 @@ export default function MovieboxWatchPage() {
             )}
 
             {/* Main Content: Native HTML5 Video Player */}
-            <div className="flex-1 w-full h-full relative bg-black flex items-center justify-center">
+            <div
+                ref={containerRef}
+                className="flex-1 w-full h-full relative bg-black flex items-center justify-center group"
+                onDoubleClick={toggleFullscreen}
+            >
                 {streamError || !videoSource ? (
                     <div className="text-center p-6 max-w-md">
                         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
