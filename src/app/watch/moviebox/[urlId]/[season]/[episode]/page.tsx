@@ -41,6 +41,23 @@ export default function MovieboxWatchPage() {
         }
     }, []);
 
+    // Aggressive hijack of native video double-click
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        const handleDblClick = (e: MouseEvent) => {
+            // Stop browser's native dblclick -> fullscreen behavior
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            toggleFullscreen();
+        };
+
+        // Use capture phase (true) to catch the event before native handlers
+        video.addEventListener("dblclick", handleDblClick, true);
+        return () => video.removeEventListener("dblclick", handleDblClick, true);
+    }, [toggleFullscreen]);
+
     const subjectId = decodeURIComponent(params.urlId || "");
     const seasonStr = decodeURIComponent(params.season || "1");
     const episodeStr = decodeURIComponent(params.episode || "1");
@@ -323,12 +340,6 @@ export default function MovieboxWatchPage() {
                         onPlay={() => setIsPlaying(true)}
                         onPause={() => setIsPlaying(false)}
                         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-                        onDoubleClick={(e) => {
-                            // Hijack native double click to use our container fullscreen instead
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleFullscreen();
-                        }}
                         className="w-full h-full"
                         style={{
                             backgroundColor: "#000",
