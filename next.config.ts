@@ -40,6 +40,18 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "zshipricf.farsunpteltd.com",
       },
+      {
+        protocol: "https",
+        hostname: "**.dramaboxdb.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.dramahue.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.dramabox.app",
+      },
     ],
   },
 };
