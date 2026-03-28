@@ -15,9 +15,13 @@ export async function GET(request: Request) {
         }
 
         const episodeNo = serialNumber ? parseInt(serialNumber) : parseInt(chapterId as string);
-        const streamData = await FlexTVScraper.getEpisodeStream(bookId, episodeNo);
-        
-        if (streamData) {
+        const streamData = await FlexTVScraper.getEpisodeStream(bookId as string, episodeNo);
+
+        if (streamData && streamData.video_list) {
+            streamData.video_list = streamData.video_list.map((v: any) => ({
+                ...v,
+                url: `/api/flextv/hls?url=${encodeURIComponent(v.url)}`
+            }));
             return encryptedResponse(streamData);
         }
 
