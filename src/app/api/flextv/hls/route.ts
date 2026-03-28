@@ -57,9 +57,11 @@ export async function GET(req: NextRequest) {
     }
 
     try {
+        console.log(`[FlexTV HLS Proxy] Requesting: ${urlParam.substring(0, 100)}...`);
         const { buffer, finalUrl, contentType } = await fetchBuffer(urlParam);
         
         const isM3u8 = urlParam.includes('.m3u8') || buffer.slice(0, 7).toString().includes('#EXTM3U');
+        console.log(`[FlexTV HLS Proxy] Response: type=${contentType}, isM3u8=${isM3u8}, size=${buffer.length}`);
 
         if (isM3u8) {
             const text = buffer.toString('utf8');

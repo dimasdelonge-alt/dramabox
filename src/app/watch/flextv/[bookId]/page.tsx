@@ -28,6 +28,13 @@ interface EpisodeData {
     video_list: VideoItem[];
 }
 
+interface ChapterBase {
+    chapter_id: string;
+    serial_number: number;
+    chapter_title: string;
+    is_charge: boolean;
+}
+
 interface DetailData {
     success: boolean;
     data: {
@@ -35,11 +42,12 @@ interface DetailData {
         book_title: string;
         book_pic: string;
         chapter_count: number;
+        chapter_base: ChapterBase[];
     };
 }
 
-async function fetchFlexTVEpisode(bookId: string, episodeNumber: number): Promise<EpisodeData> {
-    const response = await fetch(`/api/flextv/streaming?book_id=${bookId}&serial_number=${episodeNumber}`);
+async function fetchFlexTVEpisode(bookId: string, chapterId: string): Promise<EpisodeData> {
+    const response = await fetch(`/api/flextv/streaming?book_id=${bookId}&chapter_id=${chapterId}`);
     if (!response.ok) {
         throw new Error("Failed to fetch episode");
     }
@@ -91,8 +99,16 @@ export default function FlexTVWatchPage() {
 
     const { data: episodeData, isLoading, error } = useQuery({
         queryKey: ["flextv", "episode", bookId, currentEpisode],
-        queryFn: () => fetchFlexTVEpisode(bookId || "", currentEpisode),
-        enabled: !!bookId && currentEpisode > 0,
+        queryFn: async () => {
+            const chapters = detailData?.chapter_base || [];
+            // Many FlexTV dramas have chapters indexed starting from 1
+            const chapter = chapters.find(c => c.serial_number === currentEpisode) || chapters[currentEpisode - 1];
+            if (!chapter && chapters.length > 0) {
+                throw new Error("Episode not found in list");
+            }
+            return fetchFlexTVEpisode(bookId || "", chapter?.chapter_id || currentEpisode.toString());
+        },
+        enabled: !!bookId && currentEpisode > 0 && !!detailData,
     });
 
     const qualityOptions = useMemo(() => {
