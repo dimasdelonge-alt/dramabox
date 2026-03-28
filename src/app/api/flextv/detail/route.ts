@@ -22,8 +22,8 @@ export async function GET(request: Request) {
 
             // Map to SekaiDrama Detail format
             const chapterBase = (Array.isArray(list) ? list : []).map((ep: any) => ({
-                chapter_id: (ep.series_no || ep.id || ep.id_section)?.toString(),
-                serial_number: ep.series_no || ep.id || ep.id_section,
+                chapter_id: (ep.id || ep.series_no || ep.id_section)?.toString(),
+                serial_number: ep.id || ep.series_no || ep.id_section,
                 chapter_title: `Episode ${ep.series_no || ep.id || ep.id_section}`,
                 is_charge: ep.is_charge || false
             }));
