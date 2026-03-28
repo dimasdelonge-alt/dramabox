@@ -31,14 +31,21 @@ export async function GET() {
         };
 
         // Map floors to lists
-        let lists = floors.map((floor: any) => {
-            const floorBooks = (floor.list || []).map(mapDrama).filter((b: any) => b && b.book_id);
-            console.log(`[FlexTV Debug] Floor "${floor.floor_name}" has ${floorBooks.length} books`);
+        let lists = floors.map((floor: any, idx: number) => {
+            if (idx === 0) {
+                console.log("[FlexTV Debug] Floor[0] keys:", Object.keys(floor));
+                if (floor.list && floor.list.length > 0) {
+                    console.log("[FlexTV Debug] Floor[0].list[0] keys:", Object.keys(floor.list[0]));
+                }
+            }
+            const floorBooks = (floor.list || floor.seriesList || floor.data || []).map(mapDrama).filter((b: any) => b && b.book_id);
+            const fName = floor.floor_name || floor.name || floor.title || `Section ${idx + 1}`;
+            console.log(`[FlexTV Debug] Floor "${fName}" (ID: ${floor.floor_id || floor.id}) has ${floorBooks.length} books`);
             return {
-                tab_id: floor.floor_id,
-                title: floor.floor_name || "Trending",
+                tab_id: floor.floor_id || floor.id || idx,
+                title: fName,
                 books: floorBooks,
-                banners: (floor.floor_name === "Hot" || floor.floor_id === 10739) ? floorBooks.slice(0, 5).map((b: any) => ({
+                banners: (fName.toLowerCase().includes("hot") || floor.floor_id === 10739) ? floorBooks.slice(0, 5).map((b: any) => ({
                     pic: b.horizontal_cover || b.book_pic,
                     jump_param: {
                         book_id: b.book_id,
