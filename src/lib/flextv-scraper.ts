@@ -133,7 +133,7 @@ export class FlexTVScraper {
         return this.request("GET", "/webGetSeriesSectionFullList", {
             series_id: seriesId,
             series_no: 1,
-            is_all: 0
+            is_all: 1
         });
     }
 
@@ -146,11 +146,13 @@ export class FlexTVScraper {
         
         if (res?.data?.play_info?.video_url) {
             return {
-                videoList: [{
+                video_list: [{
                     url: res.data.play_info.video_url,
                     quality: 0,
-                    encode: "H264"
+                    definition: "1080p",
+                    is_h265: false
                 }],
+                is_locked: res.data.is_charge || false,
                 success: true
             };
         }

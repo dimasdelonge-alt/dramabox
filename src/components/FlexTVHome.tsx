@@ -64,7 +64,7 @@ export function FlexTVHome() {
     return (
         <div className="space-y-8">
             {/* Banner Carousel */}
-            {banners.length > 0 && <BannerCarousel banners={banners} />}
+            {banners.length > 0 && <BannerCarousel banners={banners} platform="flextv" />}
 
             {/* Book Sections */}
             {bookGroups.map((group, index) => (

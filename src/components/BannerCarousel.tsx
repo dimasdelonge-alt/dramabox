@@ -7,11 +7,13 @@ import type { ReelShortBanner } from "@/types/reelshort";
 
 interface BannerCarouselProps {
   banners: ReelShortBanner[];
+  platform?: string;
   autoPlayInterval?: number;
 }
 
 export function BannerCarousel({
   banners,
+  platform = "reelshort",
   autoPlayInterval = 5000,
 }: BannerCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -44,7 +46,7 @@ export function BannerCarousel({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Banner Image */}
-      <Link href={`/detail/reelshort/${currentBanner.jump_param.book_id}`}>
+      <Link href={`/detail/${platform}/${currentBanner.jump_param.book_id}`}>
         <img
           src={currentBanner.pic}
           alt={currentBanner.jump_param.book_title}
