@@ -146,18 +146,19 @@ export class FlexTVScraper {
             is_all: 0
         });
         
-        if (res?.data?.play_info?.video_url) {
-            return {
-                video_list: [{
-                    url: res.data.play_info.video_url,
-                    quality: 0,
-                    definition: "1080p",
-                    is_h265: false
-                }],
-                is_locked: res.data.is_charge || false,
-                success: true
-            };
-        }
-        return null;
+        const isLocked = res?.data?.detail?.is_charge === 1 || res?.data?.is_charge === 1 || false;
+        const videoUrl = res?.data?.play_info?.video_url;
+
+        return {
+            video_list: videoUrl ? [{
+                url: videoUrl,
+                quality: 0,
+                definition: "1080p",
+                is_h265: false
+            }] : [],
+            is_locked: isLocked,
+            success: true,
+            msg: videoUrl ? "Success" : (isLocked ? "Episode Terkunci" : "Stream tidak ditemukan")
+        };
     }
 }
