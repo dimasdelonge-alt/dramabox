@@ -43,11 +43,24 @@ export function ReelLifeHome() {
         };
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    // Flatten pages into a single array
-    const allDramas = data?.pages.flatMap((page) => page) || [];
+    // Healing logic for trending and deduplication
+    const rawTrending = Array.isArray(trendingData) ? trendingData : [];
+    const trendingRecords = Array.from(
+        new Map(rawTrending.map((drama: any) => [drama.bookId, drama])).values()
+    );
 
-    // Healing logic for trending
-    const trendingRecords = Array.isArray(trendingData) ? trendingData : [];
+    // Flatten pages into a single array and deduplicate
+    const rawAllDramas = data?.pages.flatMap((page) => page) || [];
+    const trendingIds = new Set(trendingRecords.map((d: any) => d.bookId));
+
+    // Deduplicate recommendations and remove items shown in trending
+    const allDramas = Array.from(
+        new Map(
+            rawAllDramas
+                .filter((drama: any) => !trendingIds.has(drama.bookId))
+                .map((drama: any) => [drama.bookId, drama])
+        ).values()
+    );
 
     if (isError) {
         return (
@@ -106,7 +119,7 @@ export function ReelLifeHome() {
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
                         {allDramas.map((drama: any, index: number) => (
                             <UnifiedMediaCard
-                                key={`${drama.bookId}-${index}`}
+                                key={drama.bookId}
                                 index={index}
                                 title={drama.bookName}
                                 cover={drama.cover || ""}

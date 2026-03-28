@@ -33,7 +33,7 @@ export function ReelShortSection() {
       }
       if (list.books && list.books.length > 0) {
         const sectionNames = ["Populer", "Terbaru", "Trending", "Untuk Kamu"];
-        const title = sectionNames[index] || `Section ${index + 1}`;
+        const title = list.title || sectionNames[index] || `Section ${index + 1}`;
         bookGroups.push({ title, books: list.books });
       }
     });
