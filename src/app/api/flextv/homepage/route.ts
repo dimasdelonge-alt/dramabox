@@ -6,16 +6,8 @@ import { encryptedResponse } from "@/lib/api-utils";
 export async function GET() {
     try {
         const res = await FlexTVScraper.getHomepage();
-        let rawBooks = (res && res.code === 0 && res.data?.list) ? res.data.list : [];
+        const floors = (res && res.code === 0 && res.data?.list) ? res.data.list : [];
         
-        // If homepage is empty or small, mix with some popular search results as fallback
-        if (rawBooks.length < 5) {
-            const searchRes = await FlexTVScraper.search("Hot");
-            if (searchRes?.data?.list) {
-                rawBooks = [...rawBooks, ...searchRes.data.list];
-            }
-        }
-
         const mapDrama = (b: any) => ({
             book_id: b.series_id,
             book_title: b.series_name,
@@ -26,42 +18,43 @@ export async function GET() {
             tag: b.tag_names?.join(", ")
         });
 
-        const books = rawBooks.map(mapDrama);
-        
-        // Create multiple sections for a better look
-        const lists = [
-            {
-                tab_id: 1,
-                title: "Trending FlexTV",
-                books: books.slice(0, 12),
-                banners: books.slice(0, 5).map((b: any) => ({
-                    pic: b.horizontal_cover || b.book_pic,
-                    jump_param: {
-                        book_id: b.book_id,
-                        book_title: b.book_title
-                    },
-                    play_button: 1
-                }))
-            }
-        ];
+        // Map floors to lists
+        const lists = floors.map((floor: any) => ({
+            tab_id: floor.floor_id,
+            title: floor.floor_name,
+            books: (floor.list || []).map(mapDrama),
+            banners: floor.floor_name === "Hot" ? (floor.list || []).slice(0, 5).map((b: any) => ({
+                pic: b.horizontal_cover_url || b.vertical_cover_url,
+                jump_param: {
+                    book_id: b.series_id,
+                    book_title: b.series_name
+                },
+                play_button: 1
+            })) : []
+        })).filter((l: any) => l.books.length > 0);
 
-        // Add "Rekomendasi" section if we have enough books
-        if (books.length > 12) {
-            lists.push({
-                tab_id: 2,
-                title: "Rekomendasi",
-                books: books.slice(12, 24),
-                banners: []
-            });
+        // If homepage is too empty, add search fallback
+        if (lists.length === 0 || (lists.length === 1 && lists[0].books.length < 5)) {
+            const searchRes = await FlexTVScraper.search("Hot");
+            if (searchRes?.data?.list) {
+                const fallbackBooks = searchRes.data.list.map(mapDrama);
+                lists.push({
+                    tab_id: 999,
+                    title: "Rekomendasi FlexTV",
+                    books: fallbackBooks,
+                    banners: lists.length === 0 ? fallbackBooks.slice(0, 5).map((b: any) => ({
+                        pic: b.horizontal_cover || b.book_pic,
+                        jump_param: { book_id: b.book_id, book_title: b.book_title },
+                        play_button: 1
+                    })) : []
+                });
+            }
         }
 
         return encryptedResponse({
             success: true,
             data: {
-                tab_list: [
-                    { tab_id: 1, tab_name: "TERBARU" },
-                    { tab_id: 2, tab_name: "REKOMENDASI" }
-                ],
+                tab_list: lists.map((l: any) => ({ tab_id: l.tab_id, tab_name: l.title.toUpperCase() })),
                 lists
             }
         });

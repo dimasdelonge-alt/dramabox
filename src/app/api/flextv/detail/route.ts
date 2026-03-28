@@ -16,7 +16,7 @@ export async function GET(request: Request) {
         
         if (res && res.code === 0 && res.data) {
             const detail = res.data.detail || {};
-            const list = res.data.list || [];
+            const list = res.data.section_list || [];
             
             // Map to SekaiDrama Detail format
             const bookDetail = {
