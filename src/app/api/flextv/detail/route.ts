@@ -15,8 +15,8 @@ export async function GET(request: Request) {
         const res = await FlexTVScraper.getDramaDetail(seriesId);
         
         if (res && res.code === 0 && res.data) {
-            const detail = res.data.detail || {};
-            const list = res.data.section_list || res.data.list || [];
+            const detail = res.data.detail || res.data.series_detail || {};
+            const list = res.data.section_list || res.data.list || res.data.series_list || [];
             
             // Map to SekaiDrama Detail format
             const bookDetail = {
@@ -27,9 +27,9 @@ export async function GET(request: Request) {
                 chapter_count: detail.max_series_no || detail.chapter_count || 0,
                 tag: Array.isArray(detail.tag_names) ? detail.tag_names.join(", ") : (detail.tag_names || ""),
                 chapter_base: (Array.isArray(list) ? list : []).map((ep: any) => ({
-                    chapter_id: (ep.series_no || ep.id)?.toString(),
-                    serial_number: ep.series_no || ep.id,
-                    chapter_title: `Episode ${ep.series_no || ep.id}`,
+                    chapter_id: (ep.series_no || ep.id || ep.id_section)?.toString(),
+                    serial_number: ep.series_no || ep.id || ep.id_section,
+                    chapter_title: `Episode ${ep.series_no || ep.id || ep.id_section}`,
                     is_charge: ep.is_charge || false
                 }))
             };
