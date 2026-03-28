@@ -13,6 +13,7 @@ import { useFlickReelsSearch } from "@/hooks/useFlickReels";
 import { useFreeReelsSearch } from "@/hooks/useFreeReels";
 import { useShortMaxSearch } from "@/hooks/useShortMax";
 import { useMovieboxSearch } from "@/hooks/useMoviebox";
+import { useFlexTVSearch } from "@/hooks/useFlexTV";
 import { usePlatform } from "@/hooks/usePlatform";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePathname } from "next/navigation";
@@ -25,7 +26,7 @@ export function Header() {
   const normalizedQuery = debouncedQuery.trim();
 
   // Platform context
-  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels, isShortMax, isMoviebox, platformInfo } = usePlatform();
+  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels, isShortMax, isMoviebox, isFlexTV, platformInfo } = usePlatform();
 
   // Search based on platform
   const { data: dramaBoxResults, isLoading: isSearchingDramaBox } = useSearchDramas(
@@ -52,6 +53,9 @@ export function Header() {
   const { data: movieboxResults, isLoading: isSearchingMoviebox } = useMovieboxSearch(
     isMoviebox ? normalizedQuery : ""
   );
+  const { data: flexTVResults, isLoading: isSearchingFlexTV } = useFlexTVSearch(
+    isFlexTV ? normalizedQuery : ""
+  );
 
   const isSearching = isDramaBox
     ? isSearchingDramaBox
@@ -67,7 +71,9 @@ export function Header() {
               ? isSearchingFreeReels
               : isShortMax
                 ? isSearchingShortMax
-                : isSearchingMoviebox;
+                : isMoviebox
+                  ? isSearchingMoviebox
+                  : isSearchingFlexTV;
 
   // Search results processing
   const searchResults = isDramaBox
@@ -85,7 +91,9 @@ export function Header() {
               ? freeReelsResults
               : isShortMax
                 ? shortMaxResults?.data
-                : movieboxResults?.items;
+                : isMoviebox
+                  ? movieboxResults?.items
+                  : flexTVResults?.data;
 
   const handleSearchClose = () => {
     setSearchOpen(false);
@@ -467,6 +475,42 @@ export function Header() {
                                   {tag}
                                 </span>
                               ))}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {/* FlexTV Results */}
+                {isFlexTV && searchResults && searchResults.length > 0 && (
+                  <div className="grid gap-3">
+                    {searchResults.map((book: any, index: number) => (
+                      <Link
+                        key={book.book_id}
+                        href={`/detail/flextv/${book.book_id}`}
+                        onClick={handleSearchClose}
+                        className="flex gap-4 p-4 rounded-2xl bg-card hover:bg-muted transition-all text-left animate-fade-up overflow-hidden"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <img
+                          src={book.book_pic}
+                          alt={book.book_title}
+                          className="w-16 h-24 object-cover rounded-xl flex-shrink-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display font-semibold text-foreground truncate">{book.book_title}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                            {book.description}
+                          </p>
+                          {book.tag && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                <span className="tag-pill text-[10px]">
+                                  {book.tag}
+                                </span>
                             </div>
                           )}
                         </div>
