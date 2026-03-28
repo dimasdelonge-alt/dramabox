@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-export type Platform = "dramabox" | "reelshort" | "netshort" | "melolo" | "flickreels" | "freereels" | "shortmax" | "moviebox" | "reellife" | "flextv";
+export type Platform = "dramabox" | "reelshort" | "netshort" | "melolo" | "flickreels" | "freereels" | "shortmax" | "moviebox" | "reellife";
 
 export interface PlatformInfo {
   id: Platform;
@@ -66,12 +66,6 @@ export const PLATFORMS: PlatformInfo[] = [
     logo: "/reellife.png",
     apiBase: "/api/reellife",
   },
-  {
-    id: "flextv",
-    name: "FlexTV",
-    logo: "/flextv.png",
-    apiBase: "/api/flextv",
-  },
 ];
 
 interface PlatformState {
@@ -107,6 +101,5 @@ export function usePlatform() {
     isShortMax: currentPlatform === "shortmax",
     isMoviebox: currentPlatform === "moviebox",
     isReelLife: currentPlatform === "reellife",
-    isFlexTV: currentPlatform === "flextv",
   };
 }

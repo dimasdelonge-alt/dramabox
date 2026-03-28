@@ -1,7 +1,8 @@
-import { safeJson, encryptedResponse } from "@/lib/api-utils";
+import { encryptedResponse } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
+import { DramaBoxScraper } from "@/lib/dramabox-scraper";
 
-const UPSTREAM_API = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sansekai.my.id/api") + "/dramabox";
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -12,22 +13,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(
-      `${UPSTREAM_API}/search?query=${encodeURIComponent(query)}`,
-      { cache: 'no-store',}
-    );
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch data" },
-        { status: response.status }
-      );
-    }
-
-    const data = await safeJson(response);
+    const data = await DramaBoxScraper.search(query);
     return encryptedResponse(data);
   } catch (error) {
-    console.error("API Error:", error);
+    console.error("DramaBox Search Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

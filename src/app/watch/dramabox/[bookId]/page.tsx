@@ -77,14 +77,28 @@ export default function DramaBoxWatchPage() {
     return unique.sort((a, b) => b - a);
   }, [defaultCdn]);
 
+  const proxiedSubtitleUrl = useMemo(() => {
+    if (!currentEpisodeData) return "";
+    if (currentEpisodeData.useMultiSubtitle !== 1) return "";
+    if (!currentEpisodeData.subLanguageVoList?.length) return "";
+
+    // Priority: find "in" (Indonesian), then isDefault === 1, then first non-"none"
+    const indo = currentEpisodeData.subLanguageVoList.find(
+      (s) => s.captionLanguage === "in" && s.url
+    );
+    const subtitleUrl = indo?.url || currentEpisodeData.subLanguageVoList.find(s => s.isDefault === 1)?.url || currentEpisodeData.subLanguageVoList[0]?.url || "";
+    
+    if (!subtitleUrl) return "";
+    return `/api/proxy/video?url=${encodeURIComponent(subtitleUrl)}&referer=${encodeURIComponent('https://sansekai.my.id/')}`;
+  }, [currentEpisodeData]);
+
   // Keep selected quality valid for the current episode
   useEffect(() => {
     if (!availableQualities.length) return;
     if (!availableQualities.includes(quality)) {
       setQuality(availableQualities[0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availableQualities.join(",")]);
+  }, [availableQualities, quality]);
 
   // Get video URL with selected quality
   const getVideoUrl = () => {
@@ -95,7 +109,11 @@ export default function DramaBoxWatchPage() {
       defaultCdn.videoPathList.find((v) => v.isDefault === 1) ||
       defaultCdn.videoPathList[0];
 
-    return videoPath?.videoPath || "";
+    const rawUrl = videoPath?.videoPath || "";
+    if (!rawUrl) return "";
+    
+    // Proxy the video to bypass encryption/referer check
+    return `/api/proxy/video?url=${encodeURIComponent(rawUrl)}&referer=${encodeURIComponent('https://sansekai.my.id/')}`;
   };
 
   const handleVideoEnded = () => {
@@ -105,6 +123,34 @@ export default function DramaBoxWatchPage() {
       handleEpisodeChange(next, true);
     }
   };
+
+  // Manual Subtitle Injection & Enforcement
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !proxiedSubtitleUrl) return;
+
+    const track = document.createElement('track');
+    track.kind = 'subtitles';
+    track.label = 'Indonesia';
+    track.srclang = 'id';
+    track.default = true;
+    track.src = proxiedSubtitleUrl;
+
+    const currentTracks = video.querySelectorAll('track');
+    currentTracks.forEach(t => video.removeChild(t));
+    
+    video.appendChild(track);
+    
+    const enforce = () => {
+        if (track.track) track.track.mode = 'showing';
+    };
+    
+    video.addEventListener('loadeddata', enforce);
+    return () => {
+        video.removeEventListener('loadeddata', enforce);
+        if (video.contains(track)) video.removeChild(track);
+    };
+  }, [proxiedSubtitleUrl]);
 
   // Handle both new and legacy API formats
   let book: { bookId: string; bookName: string } | null = null;

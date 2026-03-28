@@ -15,6 +15,7 @@ export async function GET(request: Request) {
         }
 
         const episodeNo = serialNumber ? parseInt(serialNumber) : parseInt(chapterId as string);
+        console.log(`[FlexTV API] Requesting Stream: bookId=${bookId}, episodeNo=${episodeNo}`);
         const streamData = await FlexTVScraper.getEpisodeStream(bookId as string, episodeNo);
 
         if (streamData && streamData.video_list) {

@@ -46,8 +46,8 @@ interface DetailData {
     };
 }
 
-async function fetchFlexTVEpisode(bookId: string, chapterId: string): Promise<EpisodeData> {
-    const response = await fetch(`/api/flextv/streaming?book_id=${bookId}&chapter_id=${chapterId}`);
+async function fetchFlexTVEpisode(bookId: string, serialNumber: number): Promise<EpisodeData> {
+    const response = await fetch(`/api/flextv/streaming?book_id=${bookId}&serial_number=${serialNumber}`);
     if (!response.ok) {
         throw new Error("Failed to fetch episode");
     }
@@ -106,7 +106,7 @@ export default function FlexTVWatchPage() {
             if (!chapter && chapters.length > 0) {
                 throw new Error("Episode not found in list");
             }
-            return fetchFlexTVEpisode(bookId || "", chapter?.chapter_id || currentEpisode.toString());
+            return fetchFlexTVEpisode(bookId || "", chapter?.serial_number || currentEpisode);
         },
         enabled: !!bookId && currentEpisode > 0 && !!detailData,
     });

@@ -145,8 +145,9 @@ export class FlexTVScraper {
             series_no: seriesNo,
             is_all: 0
         });
-        
-        const isLocked = res?.data?.detail?.is_charge === 1 || res?.data?.is_charge === 1 || false;
+        const list = res?.data?.section_list || res?.data?.list || [];
+        const episodeInfo = list.find((ep: any) => ep.series_no === seriesNo);
+        const isLocked = (episodeInfo && episodeInfo.is_charge === 1) || res?.data?.detail?.is_charge === 1 || res?.data?.is_charge === 1 || false;
         const videoUrl = res?.data?.play_info?.video_url;
 
         return {

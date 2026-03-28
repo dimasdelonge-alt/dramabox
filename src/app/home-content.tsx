@@ -13,10 +13,9 @@ import { useLatestDramas, useTrendingDramas, useDubindoDramas } from "@/hooks/us
 import { usePlatform } from "@/hooks/usePlatform";
 import { InfiniteDramaSection } from "@/components/InfiniteDramaSection";
 import { ReelLifeHome } from "@/components/ReelLifeHome";
-import { FlexTVHome } from "@/components/FlexTVHome";
 
 export default function HomeContent() {
-  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels, isShortMax, isMoviebox, isReelLife, isFlexTV } = usePlatform();
+  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels, isShortMax, isMoviebox, isReelLife } = usePlatform();
 
   // Fetch data for all DramaBox sections
   // const { data: popularDramas, isLoading: loadingPopular, error: errorPopular, refetch: refetchPopular } = useForYouDramas(); // REMOVED as requested (replaced by infinite scroll)
@@ -116,13 +115,6 @@ export default function HomeContent() {
       {isReelLife && (
         <div className="container mx-auto px-4 py-6 space-y-8">
           <ReelLifeHome />
-        </div>
-      )}
-
-      {/* FlexTV Content */}
-      {isFlexTV && (
-        <div className="container mx-auto px-4 py-6 space-y-8">
-          <FlexTVHome />
         </div>
       )}
     </main>
