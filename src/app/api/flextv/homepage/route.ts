@@ -6,8 +6,11 @@ import { encryptedResponse } from "@/lib/api-utils";
 export async function GET() {
     try {
         const res = await FlexTVScraper.getHomepage();
+        console.log("[FlexTV Debug] Homepage response:", res ? "OK" : "FAILED", res?.code);
+
         const floors = (res && res.code === 0 && res.data?.list && Array.isArray(res.data.list)) ? res.data.list : [];
-        
+        console.log("[FlexTV Debug] Floor count:", floors.length);
+
         const safeJoin = (arr: any) => {
             if (Array.isArray(arr)) return arr.join(", ");
             if (typeof arr === "string") return arr;
@@ -29,7 +32,8 @@ export async function GET() {
 
         // Map floors to lists
         let lists = floors.map((floor: any) => {
-            const floorBooks = (floor.list || []).map(mapDrama).filter(Boolean);
+            const floorBooks = (floor.list || []).map(mapDrama).filter((b: any) => b && b.book_id);
+            console.log(`[FlexTV Debug] Floor "${floor.floor_name}" has ${floorBooks.length} books`);
             return {
                 tab_id: floor.floor_id,
                 title: floor.floor_name || "Trending",
@@ -47,10 +51,13 @@ export async function GET() {
 
         // If homepage is too empty, add search fallback
         if (lists.length === 0) {
+            console.log("[FlexTV Debug] Homepage floors empty, trying search fallback...");
             const searchRes = await FlexTVScraper.search("Hot");
+            console.log("[FlexTV Debug] Search response:", searchRes ? "OK" : "FAILED", searchRes?.code);
             const searchList = (searchRes?.data?.list && Array.isArray(searchRes.data.list)) ? searchRes.data.list : [];
             if (searchList.length > 0) {
-                const fallbackBooks = searchList.map(mapDrama).filter(Boolean);
+                const fallbackBooks = searchList.map(mapDrama).filter((b: any) => b && b.book_id);
+                console.log("[FlexTV Debug] Search fallback found books:", fallbackBooks.length);
                 lists.push({
                     tab_id: 999,
                     title: "Rekomendasi FlexTV",
@@ -66,7 +73,14 @@ export async function GET() {
 
         // Final safety check
         if (lists.length === 0) {
-            return NextResponse.json({ error: "No data available" }, { status: 404 });
+            console.warn("[FlexTV Debug] Final lists is still empty. 404 returned.");
+            return NextResponse.json({ 
+                error: "No data available", 
+                debug: { 
+                    res_hp: res ? res.code : "null", 
+                    floors_len: floors.length 
+                } 
+            }, { status: 404 });
         }
 
         return encryptedResponse({
