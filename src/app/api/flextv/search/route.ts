@@ -14,16 +14,20 @@ export async function GET(request: Request) {
 
         const res = await FlexTVScraper.search(keywords);
         
-        if (res && res.code === 0 && res.data?.list) {
-            const books = res.data.list.map((b: any) => ({
-                book_id: b.series_id,
-                book_title: b.series_name,
-                book_pic: b.vertical_cover_url || b.horizontal_cover_url,
-                horizontal_cover: b.horizontal_cover_url,
-                description: b.introduction,
-                chapter_count: b.max_series_no,
-                tag: b.tag_names?.join(", ")
-            }));
+        if (res && res.code === 0 && res.data?.list && Array.isArray(res.data.list)) {
+            const mapDrama = (b: any) => {
+                if (!b) return null;
+                return {
+                    book_id: b.series_id || b.id?.toString(),
+                    book_title: b.series_name || b.title,
+                    book_pic: b.vertical_cover_url || b.horizontal_cover_url || b.cover || b.pic,
+                    horizontal_cover: b.horizontal_cover_url || b.cover || b.pic,
+                    description: b.introduction || b.desc || "",
+                    chapter_count: b.max_series_no || b.chapter_count || 0,
+                    tag: Array.isArray(b.tag_names) ? b.tag_names.join(", ") : (b.tag_names || "")
+                };
+            };
+            const books = res.data.list.map(mapDrama).filter(Boolean);
 
             return encryptedResponse({
                 success: true,

@@ -16,21 +16,21 @@ export async function GET(request: Request) {
         
         if (res && res.code === 0 && res.data) {
             const detail = res.data.detail || {};
-            const list = res.data.section_list || [];
+            const list = res.data.section_list || res.data.list || [];
             
             // Map to SekaiDrama Detail format
             const bookDetail = {
-                book_id: detail.series_id,
-                book_title: detail.series_name,
-                book_pic: detail.vertical_cover_url || detail.horizontal_cover_url,
-                description: detail.introduction,
-                chapter_count: detail.max_series_no,
-                tag: detail.tag_names?.join(", "),
-                chapter_base: list.map((ep: any) => ({
-                    chapter_id: ep.series_no.toString(),
-                    serial_number: ep.series_no,
-                    chapter_title: `Episode ${ep.series_no}`,
-                    is_charge: ep.is_charge
+                book_id: detail.series_id || detail.id?.toString(),
+                book_title: detail.series_name || detail.title,
+                book_pic: detail.vertical_cover_url || detail.horizontal_cover_url || detail.cover || detail.pic,
+                description: detail.introduction || detail.desc || "",
+                chapter_count: detail.max_series_no || detail.chapter_count || 0,
+                tag: Array.isArray(detail.tag_names) ? detail.tag_names.join(", ") : (detail.tag_names || ""),
+                chapter_base: (Array.isArray(list) ? list : []).map((ep: any) => ({
+                    chapter_id: (ep.series_no || ep.id)?.toString(),
+                    serial_number: ep.series_no || ep.id,
+                    chapter_title: `Episode ${ep.series_no || ep.id}`,
+                    is_charge: ep.is_charge || false
                 }))
             };
 

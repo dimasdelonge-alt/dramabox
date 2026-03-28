@@ -6,49 +6,67 @@ import { encryptedResponse } from "@/lib/api-utils";
 export async function GET() {
     try {
         const res = await FlexTVScraper.getHomepage();
-        const floors = (res && res.code === 0 && res.data?.list) ? res.data.list : [];
+        const floors = (res && res.code === 0 && res.data?.list && Array.isArray(res.data.list)) ? res.data.list : [];
         
-        const mapDrama = (b: any) => ({
-            book_id: b.series_id,
-            book_title: b.series_name,
-            book_pic: b.vertical_cover_url || b.horizontal_cover_url,
-            horizontal_cover: b.horizontal_cover_url,
-            description: b.introduction,
-            chapter_count: b.max_series_no,
-            tag: b.tag_names?.join(", ")
-        });
+        const safeJoin = (arr: any) => {
+            if (Array.isArray(arr)) return arr.join(", ");
+            if (typeof arr === "string") return arr;
+            return "";
+        };
+
+        const mapDrama = (b: any) => {
+            if (!b) return null;
+            return {
+                book_id: b.series_id || b.id?.toString(),
+                book_title: b.series_name || b.title,
+                book_pic: b.vertical_cover_url || b.horizontal_cover_url || b.cover || b.pic,
+                horizontal_cover: b.horizontal_cover_url || b.cover || b.pic,
+                description: b.introduction || b.desc || "",
+                chapter_count: b.max_series_no || b.chapter_count || 0,
+                tag: safeJoin(b.tag_names)
+            };
+        };
 
         // Map floors to lists
-        const lists = floors.map((floor: any) => ({
-            tab_id: floor.floor_id,
-            title: floor.floor_name,
-            books: (floor.list || []).map(mapDrama),
-            banners: floor.floor_name === "Hot" ? (floor.list || []).slice(0, 5).map((b: any) => ({
-                pic: b.horizontal_cover_url || b.vertical_cover_url,
-                jump_param: {
-                    book_id: b.series_id,
-                    book_title: b.series_name
-                },
-                play_button: 1
-            })) : []
-        })).filter((l: any) => l.books.length > 0);
+        let lists = floors.map((floor: any) => {
+            const floorBooks = (floor.list || []).map(mapDrama).filter(Boolean);
+            return {
+                tab_id: floor.floor_id,
+                title: floor.floor_name || "Trending",
+                books: floorBooks,
+                banners: (floor.floor_name === "Hot" || floor.floor_id === 10739) ? floorBooks.slice(0, 5).map((b: any) => ({
+                    pic: b.horizontal_cover || b.book_pic,
+                    jump_param: {
+                        book_id: b.book_id,
+                        book_title: b.book_title
+                    },
+                    play_button: 1
+                })) : []
+            };
+        }).filter((l: any) => l.books.length > 0);
 
         // If homepage is too empty, add search fallback
-        if (lists.length === 0 || (lists.length === 1 && lists[0].books.length < 5)) {
+        if (lists.length === 0) {
             const searchRes = await FlexTVScraper.search("Hot");
-            if (searchRes?.data?.list) {
-                const fallbackBooks = searchRes.data.list.map(mapDrama);
+            const searchList = (searchRes?.data?.list && Array.isArray(searchRes.data.list)) ? searchRes.data.list : [];
+            if (searchList.length > 0) {
+                const fallbackBooks = searchList.map(mapDrama).filter(Boolean);
                 lists.push({
                     tab_id: 999,
                     title: "Rekomendasi FlexTV",
                     books: fallbackBooks,
-                    banners: lists.length === 0 ? fallbackBooks.slice(0, 5).map((b: any) => ({
+                    banners: fallbackBooks.slice(0, 5).map((b: any) => ({
                         pic: b.horizontal_cover || b.book_pic,
                         jump_param: { book_id: b.book_id, book_title: b.book_title },
                         play_button: 1
-                    })) : []
+                    }))
                 });
             }
+        }
+
+        // Final safety check
+        if (lists.length === 0) {
+            return NextResponse.json({ error: "No data available" }, { status: 404 });
         }
 
         return encryptedResponse({
