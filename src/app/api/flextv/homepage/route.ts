@@ -6,11 +6,8 @@ import { encryptedResponse } from "@/lib/api-utils";
 export async function GET() {
     try {
         const res = await FlexTVScraper.getHomepage();
-        console.log("[FlexTV Debug] Homepage response:", res ? "OK" : "FAILED", res?.code);
-
-        const floors = (res && res.code === 0 && res.data?.list && Array.isArray(res.data.list)) ? res.data.list : [];
-        console.log("[FlexTV Debug] Floor count:", floors.length);
-
+        const rawList = (res && res.code === 0 && res.data?.list && Array.isArray(res.data.list)) ? res.data.list : [];
+        
         const safeJoin = (arr: any) => {
             if (Array.isArray(arr)) return arr.join(", ");
             if (typeof arr === "string") return arr;
@@ -26,45 +23,53 @@ export async function GET() {
                 horizontal_cover: b.horizontal_cover_url || b.cover || b.pic,
                 description: b.introduction || b.desc || "",
                 chapter_count: b.max_series_no || b.chapter_count || 0,
-                tag: safeJoin(b.tag_names)
+                tag: safeJoin(b.tag_names || b.tag)
             };
         };
 
-        // Map floors to lists
-        let lists = floors.map((floor: any, idx: number) => {
-            if (idx === 0) {
-                console.log("[FlexTV Debug] Floor[0] keys:", Object.keys(floor));
-                if (floor.list && floor.list.length > 0) {
-                    console.log("[FlexTV Debug] Floor[0].list[0] keys:", Object.keys(floor.list[0]));
-                }
-            }
-            const floorBooks = (floor.list || floor.seriesList || floor.data || []).map(mapDrama).filter((b: any) => b && b.book_id);
-            const fName = floor.floor_name || floor.name || floor.title || `Section ${idx + 1}`;
-            console.log(`[FlexTV Debug] Floor "${fName}" (ID: ${floor.floor_id || floor.id}) has ${floorBooks.length} books`);
-            return {
-                tab_id: floor.floor_id || floor.id || idx,
-                title: fName,
-                books: floorBooks,
-                banners: (fName.toLowerCase().includes("hot") || floor.floor_id === 10739) ? floorBooks.slice(0, 5).map((b: any) => ({
-                    pic: b.horizontal_cover || b.book_pic,
-                    jump_param: {
-                        book_id: b.book_id,
-                        book_title: b.book_title
-                    },
-                    play_button: 1
-                })) : []
-            };
-        }).filter((l: any) => l.books.length > 0);
+        let lists: any[] = [];
 
-        // If homepage is too empty, add search fallback
+        // Determine if rawList is a list of floors or a list of dramas
+        const isFlatList = rawList.length > 0 && (rawList[0].series_id || rawList[0].series_name);
+
+        if (isFlatList) {
+            console.log("[FlexTV Debug] Detected flat drama list on homepage");
+            const books = rawList.map(mapDrama).filter((b: any) => b && b.book_id);
+            lists.push({
+                tab_id: 1,
+                title: "Trending FlexTV",
+                books: books,
+                banners: books.slice(0, 5).map((b: any) => ({
+                    pic: b.horizontal_cover || b.book_pic,
+                    jump_param: { book_id: b.book_id, book_title: b.book_title },
+                    play_button: 1
+                }))
+            });
+        } else {
+            console.log("[FlexTV Debug] Detected nested floor list on homepage");
+            lists = rawList.map((floor: any, idx: number) => {
+                const floorBooks = (floor.list || floor.seriesList || floor.data || []).map(mapDrama).filter((b: any) => b && b.book_id);
+                const fName = floor.floor_name || floor.name || floor.title || `Section ${idx + 1}`;
+                return {
+                    tab_id: floor.floor_id || floor.id || idx,
+                    title: fName,
+                    books: floorBooks,
+                    banners: (fName.toLowerCase().includes("hot") || floor.floor_id === 10739) ? floorBooks.slice(0, 5).map((b: any) => ({
+                        pic: b.horizontal_cover || b.book_pic,
+                        jump_param: { book_id: b.book_id, book_title: b.book_title },
+                        play_button: 1
+                    })) : []
+                };
+            }).filter((l: any) => l.books.length > 0);
+        }
+
+        // Search fallback if still empty
         if (lists.length === 0) {
-            console.log("[FlexTV Debug] Homepage floors empty, trying search fallback...");
+            console.log("[FlexTV Debug] Lists still empty, trying search fallback...");
             const searchRes = await FlexTVScraper.search("Hot");
-            console.log("[FlexTV Debug] Search response:", searchRes ? "OK" : "FAILED", searchRes?.code);
             const searchList = (searchRes?.data?.list && Array.isArray(searchRes.data.list)) ? searchRes.data.list : [];
             if (searchList.length > 0) {
                 const fallbackBooks = searchList.map(mapDrama).filter((b: any) => b && b.book_id);
-                console.log("[FlexTV Debug] Search fallback found books:", fallbackBooks.length);
                 lists.push({
                     tab_id: 999,
                     title: "Rekomendasi FlexTV",
@@ -78,17 +83,17 @@ export async function GET() {
             }
         }
 
-        // Final safety check
         if (lists.length === 0) {
-            console.warn("[FlexTV Debug] Final lists is still empty. 404 returned.");
-            return NextResponse.json({ 
-                error: "No data available", 
-                debug: { 
-                    res_hp: res ? res.code : "null", 
-                    floors_len: floors.length 
-                } 
-            }, { status: 404 });
+            return NextResponse.json({ error: "No data available" }, { status: 404 });
         }
+
+        return encryptedResponse({
+            success: true,
+            data: {
+                tab_list: lists.map((l: any) => ({ tab_id: l.tab_id, tab_name: l.title.toUpperCase() })),
+                lists
+            }
+        });
 
         return encryptedResponse({
             success: true,
