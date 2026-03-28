@@ -1,31 +1,75 @@
 
 "use client";
 
-import { useMemo } from "react";
-import { useFlexTVHomepage } from "@/hooks/useFlexTV";
+import { useMemo, useEffect, useRef } from "react";
+import { useInfiniteFlexTVHomepage } from "@/hooks/useFlexTV";
 import { BannerCarousel } from "./BannerCarousel";
 import { UnifiedMediaCard } from "./UnifiedMediaCard";
 import { UnifiedErrorDisplay } from "./UnifiedErrorDisplay";
+import { Loader2 } from "lucide-react";
 
 export function FlexTVHome() {
-    const { data, isLoading, error, refetch } = useFlexTVHomepage();
+    const { 
+        data, 
+        isLoading, 
+        error, 
+        fetchNextPage, 
+        hasNextPage, 
+        isFetchingNextPage, 
+        refetch 
+    } = useInfiniteFlexTVHomepage();
+
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     const sections = useMemo(() => {
-        if (!data?.data?.lists) return { banners: [], bookGroups: [] };
+        if (!data?.pages) return { banners: [], bookGroups: [] };
 
         const banners: any[] = [];
-        const bookGroups: { title: string; books: any[] }[] = [];
+        const bookGroupsMap = new Map<string, { title: string; books: any[] }>();
 
-        data.data.lists.forEach((list) => {
-            if (list.banners && list.banners.length > 0) {
-                banners.push(...list.banners);
-            }
-            if (list.books && list.books.length > 0) {
-                bookGroups.push({ title: list.title, books: list.books });
-            }
+        data.pages.forEach((page) => {
+            if (!page.success || !page.data.lists) return;
+
+            page.data.lists.forEach((list) => {
+                // Add banners only from first page
+                if (list.banners && list.banners.length > 0 && banners.length === 0) {
+                    banners.push(...list.banners);
+                }
+
+                if (list.books && list.books.length > 0) {
+                    const existing = bookGroupsMap.get(list.title);
+                    if (existing) {
+                        // Deduplicate books by book_id to avoid repeats on pagination boundaries
+                        const seenIds = new Set(existing.books.map(b => b.book_id));
+                        const newBooks = list.books.filter(b => !seenIds.has(b.book_id));
+                        existing.books.push(...newBooks);
+                    } else {
+                        bookGroupsMap.set(list.title, { title: list.title, books: [...list.books] });
+                    }
+                }
+            });
         });
 
-        return { banners, bookGroups };
+        return { banners, bookGroups: Array.from(bookGroupsMap.values()) };
     }, [data]);
 
     if (error) {
@@ -38,7 +82,7 @@ export function FlexTVHome() {
         );
     }
 
-    if (isLoading) {
+    if (isLoading && !data) {
         return (
             <div className="space-y-8">
                 <div className="aspect-[21/9] rounded-2xl bg-muted/50 animate-pulse" />
@@ -62,13 +106,13 @@ export function FlexTVHome() {
     const { banners, bookGroups } = sections;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in duration-700">
             {/* Banner Carousel */}
             {banners.length > 0 && <BannerCarousel banners={banners} platform="flextv" />}
 
             {/* Book Sections */}
-            {bookGroups.map((group, index) => (
-                <section key={index}>
+            {bookGroups.map((group, sectionIndex) => (
+                <section key={sectionIndex}>
                     <h2 className="font-display font-bold text-xl md:text-2xl text-foreground mb-4">
                         {group.title}
                     </h2>
@@ -79,7 +123,7 @@ export function FlexTVHome() {
                             .map((book) => (
                                 <UnifiedMediaCard
                                     key={book.book_id}
-                                    index={index}
+                                    index={sectionIndex}
                                     title={book.book_title}
                                     cover={book.book_pic}
                                     link={`/detail/flextv/${book.book_id}`}
@@ -89,6 +133,17 @@ export function FlexTVHome() {
                     </div>
                 </section>
             ))}
+
+            {/* Infinite Scroll Trigger */}
+            <div ref={loadMoreRef} className="py-8 flex justify-center w-full">
+                {isFetchingNextPage ? (
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                ) : hasNextPage ? (
+                    <div className="h-4" />
+                ) : bookGroups.length > 0 ? (
+                    <p className="text-muted-foreground text-sm">Sudah mencapai akhir daftar</p>
+                ) : null}
+            </div>
         </div>
     );
 }

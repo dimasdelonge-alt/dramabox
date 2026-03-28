@@ -114,10 +114,10 @@ export class FlexTVScraper {
         }
     }
 
-    static async getHomepage(floorId = 10739) {
+    static async getHomepage(pageNo: number = 1, pageSize: number = 18, floorId: number = 10739) {
         return this.request("GET", "/floorData", {
-            page_no: 1,
-            page_size: 18,
+            page_no: pageNo,
+            page_size: pageSize,
             floor_id: floorId
         });
     }

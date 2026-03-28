@@ -3,9 +3,13 @@ import { NextResponse } from "next/server";
 import { FlexTVScraper } from "@/lib/flextv-scraper";
 import { encryptedResponse } from "@/lib/api-utils";
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const res = await FlexTVScraper.getHomepage();
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams.get("page") || "1");
+        const pageSize = parseInt(searchParams.get("page_size") || "20");
+
+        const res = await FlexTVScraper.getHomepage(page, pageSize);
         const rawList = (res && res.code === 0 && res.data?.list && Array.isArray(res.data.list)) ? res.data.list : [];
         
         const safeJoin = (arr: any) => {
@@ -33,20 +37,20 @@ export async function GET() {
         const isFlatList = rawList.length > 0 && (rawList[0].series_id || rawList[0].series_name);
 
         if (isFlatList) {
-            console.log("[FlexTV Debug] Detected flat drama list on homepage");
+            console.log(`[FlexTV Debug] Detected flat drama list on homepage (page ${page})`);
             const books = rawList.map(mapDrama).filter((b: any) => b && b.book_id);
             lists.push({
                 tab_id: 1,
                 title: "Trending FlexTV",
                 books: books,
-                banners: books.slice(0, 5).map((b: any) => ({
+                banners: page === 1 ? books.slice(0, 5).map((b: any) => ({
                     pic: b.horizontal_cover || b.book_pic,
                     jump_param: { book_id: b.book_id, book_title: b.book_title },
                     play_button: 1
-                }))
+                })) : []
             });
         } else {
-            console.log("[FlexTV Debug] Detected nested floor list on homepage");
+            console.log(`[FlexTV Debug] Detected nested floor list on homepage (page ${page})`);
             lists = rawList.map((floor: any, idx: number) => {
                 const floorBooks = (floor.list || floor.seriesList || floor.data || []).map(mapDrama).filter((b: any) => b && b.book_id);
                 const fName = floor.floor_name || floor.name || floor.title || `Section ${idx + 1}`;
@@ -54,7 +58,7 @@ export async function GET() {
                     tab_id: floor.floor_id || floor.id || idx,
                     title: fName,
                     books: floorBooks,
-                    banners: (fName.toLowerCase().includes("hot") || floor.floor_id === 10739) ? floorBooks.slice(0, 5).map((b: any) => ({
+                    banners: (page === 1 && (fName.toLowerCase().includes("hot") || floor.floor_id === 10739)) ? floorBooks.slice(0, 5).map((b: any) => ({
                         pic: b.horizontal_cover || b.book_pic,
                         jump_param: { book_id: b.book_id, book_title: b.book_title },
                         play_button: 1

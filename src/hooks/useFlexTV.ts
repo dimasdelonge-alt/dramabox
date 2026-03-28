@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { fetchJson } from "@/lib/fetcher";
 
 const API_BASE = "/api/flextv";
@@ -22,6 +22,22 @@ export function useFlexTVHomepage() {
         queryKey: ["flextv", "homepage"],
         queryFn: () => fetchJson<FlexTVHomepageResponse>(`${API_BASE}/homepage`),
         staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+}
+
+export function useInfiniteFlexTVHomepage() {
+    return useInfiniteQuery({
+        queryKey: ["flextv", "homepage", "infinite"],
+        queryFn: ({ pageParam = 1 }) => 
+            fetchJson<FlexTVHomepageResponse>(`${API_BASE}/homepage?page=${pageParam}`),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, allPages) => {
+            if (!lastPage.success || !lastPage.data.lists || lastPage.data.lists.every(l => l.books.length === 0)) {
+                return undefined;
+            }
+            return allPages.length + 1;
+        },
+        staleTime: 1000 * 60 * 5,
     });
 }
 
