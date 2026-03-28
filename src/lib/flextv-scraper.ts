@@ -1,86 +1,159 @@
-import crypto from 'crypto';
+
+import CryptoJS from "crypto-js";
 
 export class FlexTVScraper {
     private static BASE_URL = "https://api-quick.flextv.cc";
-    private static KEY = "u8U9Y7f6e5D4c3B2";
-    private static IV = "u8U9Y7f6e5D4c3B2";
-    private static SALT = "f9ea93e6";
+    private static APP_ID = "52u3itng7y4omkja";
+    private static SECRET = "FifZlSY4nb0eg6k8oDG2xC3UIMOwdBru";
+    private static DEFAULT_LANG = "id";
+    private static DEVICE_NUMBER = "623a02e4-607e-4010-84b2-ed84732f9c26";
 
-    private static generateSignature(timestamp: string, relativeUrl: string, token: string = "") {
-        // FlexTV signature uses the relative URL without leading slash
-        const urlForSign = relativeUrl.startsWith('/') ? relativeUrl.substring(1) : relativeUrl;
-        const input = `${timestamp}&${urlForSign}&${token}&${this.SALT}`;
-        return crypto.createHash('sha256').update(input).digest('hex').toLowerCase();
+    private static AES_KEY = CryptoJS.enc.Utf8.parse("qJZCGsxOPrUFuiz2");
+    private static AES_IV = CryptoJS.enc.Utf8.parse("3zxNedKJCoLV4Fi7");
+
+    private static getMD5(text: string): string {
+        return CryptoJS.MD5(text).toString().toLowerCase();
     }
 
-    static decrypt(ciphertext: string) {
-        try {
-            const decipher = crypto.createDecipheriv(
-                'aes-128-cbc',
-                Buffer.from(this.KEY),
-                Buffer.from(this.IV)
-            );
-            decipher.setAutoPadding(true);
-            let decrypted = decipher.update(ciphertext, 'base64', 'utf8');
-            decrypted += decipher.final('utf8');
-            return JSON.parse(decrypted);
-        } catch (error) {
-            // Sometimes it's already a string or JSON if not encrypted
-            return ciphertext;
-        }
+    private static getHmacSha256(message: string, secret: string): string {
+        return CryptoJS.HmacSHA256(message, secret).toString().toLowerCase();
     }
 
-    static async fetchApi(path: string, params: Record<string, string> = {}) {
-        const timestamp = Math.floor(Date.now() / 1000).toString();
-        const query = new URLSearchParams(params).toString();
-        const relativeUrl = `${path.startsWith('/') ? path.substring(1) : path}${query ? "?" + query : ""}`;
-        const fullUrl = `${this.BASE_URL}/${relativeUrl}`;
+    private static generateSignature(endpoint: string, params: any, timestamp: number) {
+        const fullApiPath = `${this.BASE_URL}${endpoint}`.toLowerCase();
+        const apiUrlMd5 = this.getMD5(fullApiPath);
 
-        // Assume empty token if we don't have one
-        const token = "";
-        const signature = this.generateSignature(timestamp, relativeUrl, token);
-
-        const headers: Record<string, string> = {
-            "Accept": "*/*",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "timestamp": timestamp,
-            "signature": signature,
-            "appId": "858mw3lnr40rxbca",
-            "getid": "7",
-            "api-url": "bc3dfd298e4eb8558588e841d2742623",
-            "lang": "id",
-            "Origin": "https://www.flextv.cc",
-            "Referer": "https://www.flextv.cc/",
-            "token": token
+        const p: any = {
+            apiUrl: apiUrlMd5,
+            appId: this.APP_ID,
+            lang: this.DEFAULT_LANG,
+            timestamp: timestamp.toString(),
+            deviceNumber: this.DEVICE_NUMBER
         };
 
-        try {
-            const res = await fetch(fullUrl, { headers });
-            const text = await res.text();
-            console.log(`[FlexTV Debug] HTTP Status: ${res.status}`);
-            console.log(`[FlexTV Debug] Raw Response: ${text.substring(0, 200)}`);
-
-            const json = JSON.parse(text);
-
-            if (json.is_encrypt && json.data) {
-                return this.decrypt(json.data);
+        if (params) {
+            for (const key in params) {
+                if (typeof params[key] !== 'object' && params[key] !== undefined) {
+                    p[key] = params[key].toString();
+                }
             }
-            return json.data || json;
-        } catch (error) {
-            console.error("FlexTV API Fetch Error:", error);
-            return {};
+        }
+
+        const sortedKeys = Object.keys(p).sort();
+        let m = "";
+        for (const key of sortedKeys) {
+            if (p[key] !== undefined && p[key] !== "") {
+                m += `${key}${p[key]}`;
+            }
+        }
+
+        const sig = this.getHmacSha256(m, this.SECRET);
+        return { signature: sig, apiUrlHeader: apiUrlMd5 };
+    }
+
+    private static decrypt(ciphertext: string): string | null {
+        try {
+            const decrypted = CryptoJS.AES.decrypt(ciphertext, this.AES_KEY, {
+                iv: this.AES_IV,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        } catch (e) {
+            console.error("[FlexTVScraper] Decryption error:", e);
+            return null;
         }
     }
 
-    static async getHomepage() {
-        return this.fetchApi("/api/v1/hall/info");
+    private static async request(method: string, endpoint: string, params: any = null, body: any = null) {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const { signature, apiUrlHeader } = this.generateSignature(endpoint, params || body, timestamp);
+
+        const headers: any = {
+            "apiurl": apiUrlHeader,
+            "signature": signature,
+            "timestamp": timestamp.toString(),
+            "appid": this.APP_ID,
+            "lang": this.DEFAULT_LANG,
+            "devicenumber": this.DEVICE_NUMBER,
+            "Accept": "application/json, text/plain, */*",
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+        };
+
+        let url = `${this.BASE_URL}${endpoint}`;
+        if (params) {
+            const queryString = new URLSearchParams(params).toString();
+            url += `?${queryString}`;
+        }
+
+        try {
+            const res = await fetch(url, {
+                method,
+                headers,
+                body: body ? JSON.stringify(body) : undefined
+            });
+
+            if (!res.ok) {
+                console.error(`[FlexTVScraper] Request failed: ${res.status} - ${endpoint}`);
+                return null;
+            }
+
+            const json = await res.json();
+            if (json.is_encrypt === 1 && json.data) {
+                const dec = this.decrypt(json.data);
+                if (dec) {
+                    json.data = JSON.parse(dec);
+                }
+            }
+            return json;
+        } catch (e) {
+            console.error(`[FlexTVScraper] Fetch error: ${endpoint}`, e);
+            return null;
+        }
+    }
+
+    static async getHomepage(floorId = 10739) {
+        return this.request("GET", "/floorData", {
+            page_no: 1,
+            page_size: 18,
+            floor_id: floorId
+        });
+    }
+
+    static async search(keywords: string) {
+        return this.request("GET", "/webSearchSeries", {
+            keyword: keywords,
+            page_no: 1,
+            page_size: 20
+        });
     }
 
     static async getDramaDetail(seriesId: string) {
-        return this.fetchApi("/api/v1/video/detail", { series_id: seriesId });
+        // We use webGetSeriesSectionFullList as it provides more metadata + episode list in one go
+        return this.request("GET", "/webGetSeriesSectionFullList", {
+            series_id: seriesId,
+            series_no: 1,
+            is_all: 0
+        });
     }
 
-    static async search(keyword: string) {
-        return this.fetchApi("/api/v1/search/keywords", { keyword, page: "1", page_size: "20" });
+    static async getEpisodeStream(seriesId: string, seriesNo: number) {
+        const res = await this.request("GET", "/webGetSeriesSectionFullList", {
+            series_id: seriesId,
+            series_no: seriesNo,
+            is_all: 0
+        });
+        
+        if (res?.data?.play_info?.video_url) {
+            return {
+                videoList: [{
+                    url: res.data.play_info.video_url,
+                    quality: 0,
+                    encode: "H264"
+                }],
+                success: true
+            };
+        }
+        return null;
     }
 }
