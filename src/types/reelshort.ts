@@ -74,6 +74,7 @@ export interface ReelShortList {
   bs_id: number;
   tab_id: number;
   ui_style: number;
+  title?: string;
   banners?: ReelShortBanner[];
   books?: ReelShortBook[];
   display_play_num?: boolean;
