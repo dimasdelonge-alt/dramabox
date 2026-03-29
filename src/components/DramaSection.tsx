@@ -11,9 +11,10 @@ interface DramaSectionProps {
   isLoading?: boolean;
   error?: boolean;    // New prop
   onRetry?: () => void; // New prop
+  platform?: string; // New prop to support different platform detail pages
 }
 
-export function DramaSection({ title, dramas, isLoading, error, onRetry }: DramaSectionProps) {
+export function DramaSection({ title, dramas, isLoading, error, onRetry, platform = "dramabox" }: DramaSectionProps) {
   if (error) {
     return (
       <section>
@@ -63,7 +64,7 @@ export function DramaSection({ title, dramas, isLoading, error, onRetry }: Drama
               index={index}
               title={drama.bookName}
               cover={drama.coverWap || drama.cover || ""}
-              link={`/detail/dramabox/${drama.bookId}`}
+              link={`/detail/${platform}/${drama.bookId}`}
               episodes={drama.chapterCount}
               topLeftBadge={drama.corner ? {
                 text: drama.corner.name,

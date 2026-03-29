@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-export type Platform = "dramabox" | "reelshort" | "netshort" | "melolo" | "flickreels" | "freereels" | "shortmax" | "moviebox" | "reellife";
+export type Platform = "dramabox" | "reelshort" | "netshort" | "melolo" | "flickreels" | "freereels" | "shortmax" | "moviebox" | "reellife" | "pinedrama";
 
 export interface PlatformInfo {
   id: Platform;
@@ -12,6 +12,12 @@ export interface PlatformInfo {
 }
 
 export const PLATFORMS: PlatformInfo[] = [
+  {
+    id: "pinedrama",
+    name: "NunoDrama",
+    logo: "/axd.png",
+    apiBase: "/api/pinedrama",
+  },
   {
     id: "dramabox",
     name: "DramaBox",
@@ -57,7 +63,7 @@ export const PLATFORMS: PlatformInfo[] = [
   {
     id: "moviebox",
     name: "Moviebox",
-    logo: "/anime.png", // Keep previous logo file or provide a new one
+    logo: "/anime.png",
     apiBase: "/api/moviebox",
   },
   {
@@ -74,7 +80,7 @@ interface PlatformState {
 }
 
 export const usePlatformStore = create<PlatformState>((set) => ({
-  currentPlatform: "dramabox",
+  currentPlatform: "pinedrama",
   setPlatform: (platform) => set({ currentPlatform: platform }),
 }));
 
@@ -101,5 +107,6 @@ export function usePlatform() {
     isShortMax: currentPlatform === "shortmax",
     isMoviebox: currentPlatform === "moviebox",
     isReelLife: currentPlatform === "reellife",
+    isPineDrama: currentPlatform === "pinedrama",
   };
 }

@@ -25,7 +25,7 @@ export function Header() {
   const normalizedQuery = debouncedQuery.trim();
 
   // Platform context
-  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels, isShortMax, isMoviebox, platformInfo } = usePlatform();
+  const { isDramaBox, isReelShort, isNetShort, isMelolo, isFlickReels, isFreeReels, isShortMax, isMoviebox, isPineDrama, platformInfo } = usePlatform();
 
   // Search based on platform
   const { data: dramaBoxResults, isLoading: isSearchingDramaBox } = useSearchDramas(
@@ -69,7 +69,9 @@ export function Header() {
                 ? isSearchingShortMax
                 : isMoviebox
                   ? isSearchingMoviebox
-                  : false;
+                  : isPineDrama
+                    ? false // Placeholder for PineDrama search
+                    : false;
 
   // Search results processing
   const searchResults = isDramaBox
@@ -89,7 +91,9 @@ export function Header() {
                 ? shortMaxResults?.data
                 : isMoviebox
                   ? movieboxResults?.items
-                  : [];
+                  : isPineDrama
+                    ? [] // Placeholder for PineDrama results
+                    : [];
 
   const handleSearchClose = () => {
     setSearchOpen(false);
