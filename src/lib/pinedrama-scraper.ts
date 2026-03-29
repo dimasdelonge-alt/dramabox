@@ -26,6 +26,8 @@ export interface PineDramaCollection {
 
 export interface PineDramaHomeResponse {
   collections: PineDramaCollection[];
+  has_more: boolean;
+  cursor: string;
   banner_config?: {
     image_url: string;
     title: string;
