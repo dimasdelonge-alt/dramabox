@@ -155,6 +155,13 @@ export interface CdnInfo {
   videoPathList: VideoPath[];
 }
 
+export interface SubtitleVO {
+  captionId: string;
+  captionLanguage: string;
+  url: string;
+  isDefault: number;
+}
+
 export interface Episode {
   chapterId: string;
   chapterIndex: number;
@@ -163,4 +170,6 @@ export interface Episode {
   cdnList: CdnInfo[];
   chapterImg: string;
   chargeChapter: boolean;
+  useMultiSubtitle?: number;
+  subLanguageVoList?: SubtitleVO[];
 }
